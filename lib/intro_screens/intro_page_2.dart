@@ -1,29 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../localization/string.dart'; // Use the centralized Strings class
 
-class IntroPage2 extends StatelessWidget {
+class IntroPage2 extends StatefulWidget {
   const IntroPage2({super.key});
 
   @override
+  State<IntroPage2> createState() => _IntroPage2State();
+}
+
+class _IntroPage2State extends State<IntroPage2> {
+  bool _isLanguageLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? selectedLanguage = prefs.getString('language');
+
+    if (selectedLanguage == null) {
+      // Default to French if no language was selected yet
+      selectedLanguage = 'fr';
+      await prefs.setString('language', 'fr');
+    }
+
+    Strings.load(selectedLanguage);
+
+    setState(() {
+      _isLanguageLoaded = true;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Get screen size
+    if (!_isLanguageLoaded) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+        backgroundColor: Colors.black,
+      );
+    }
+
     final screenSize = MediaQuery.of(context).size;
-    final imageWidth = screenSize.width * 0.5; // 50% of screen width
-    final fontSizeTitle = screenSize.width * 0.07; // 7% of screen width
-    final fontSizeDescription = screenSize.width * 0.045; // 4.5% of screen width
+    final imageWidth = screenSize.width * 0.5;
+    final fontSizeTitle = screenSize.width * 0.07;
+    final fontSizeDescription = screenSize.width * 0.045;
 
     return Scaffold(
       body: Stack(
         children: [
-          // Solid black background
-          Container(
-            color: Colors.black,
-          ),
+          Container(color: Colors.black),
           Center(
             child: SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Adaptive image size with gold gradient border
                   FutureBuilder(
                     future: precacheImage(
                       const AssetImage('assets/intro/airport_transportation.jpg'),
@@ -36,10 +72,10 @@ class IntroPage2 extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                             gradient: const LinearGradient(
                               colors: [
-                                Color(0xFFAEB625), // Gold #AEB625
-                                Color(0xFFF7EF8A), // Gold #F7EF8A
-                                Color(0xFFD2AC47), // Gold #D2AC47
-                                Color(0xFFEDC967), // Gold #EDC967
+                                Color(0xFFAE8625),
+                                Color(0xFFF7EF8A),
+                                Color(0xFFD2AC47),
+                                Color(0xFFEDC967),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -52,11 +88,11 @@ class IntroPage2 extends StatelessWidget {
                               ),
                             ],
                           ),
-                          padding: const EdgeInsets.all(3), // Border thickness
+                          padding: const EdgeInsets.all(3),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(17),
                             child: Image.asset(
-                              'assets/intro/airport_transportation.jpg', // Replace with your image path
+                              'assets/intro/airport_transportation.jpg',
                               width: imageWidth,
                               height: imageWidth,
                               fit: BoxFit.cover,
@@ -72,28 +108,22 @@ class IntroPage2 extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
+                            child: CircularProgressIndicator(color: Colors.white),
                           ),
                         );
                       }
                     },
                   ),
-                  SizedBox(height: screenSize.height * 0.04), // 4% of screen height
-
-                  // Adaptive title text
+                  SizedBox(height: screenSize.height * 0.04),
                   Text(
-                    'TRANSFERT AÉROPORT',
+                    Strings.of(context).airportTransferTitle,
                     style: TextStyle(
                       fontSize: fontSizeTitle,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: screenSize.height * 0.03), // 3% of screen height
-
-                  // Description with gold gradient border
+                  SizedBox(height: screenSize.height * 0.03),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.1),
                     child: Container(
@@ -101,10 +131,10 @@ class IntroPage2 extends StatelessWidget {
                         borderRadius: BorderRadius.circular(15),
                         gradient: const LinearGradient(
                           colors: [
-                            Color(0xFFAEB625), // Gold #AEB625
-                            Color(0xFFF7EF8A), // Gold #F7EF8A
-                            Color(0xFFD2AC47), // Gold #D2AC47
-                            Color(0xFFEDC967), // Gold #EDC967
+                            Color(0xFFAE8625),
+                            Color(0xFFF7EF8A),
+                            Color(0xFFD2AC47),
+                            Color(0xFFEDC967),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -117,15 +147,15 @@ class IntroPage2 extends StatelessWidget {
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.all(3), // Border thickness
+                      padding: const EdgeInsets.all(3),
                       child: Container(
                         padding: EdgeInsets.all(screenSize.width * 0.05),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          color: Colors.black, // Inner container background
+                          color: Colors.black,
                         ),
                         child: Text(
-                          'La Cab-Sud est votre partenaire de choix pour un service de transfert aéroport exceptionnel à Marseille. Spécialisée dans le transport de personnes, notre entreprise s’engage à vous fournir une expérience de voyage sans égale, alliant confort, élégance et efficacité.',
+                          Strings.of(context).airportTransferDescription,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: fontSizeDescription,

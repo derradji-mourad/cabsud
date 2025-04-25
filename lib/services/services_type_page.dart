@@ -1,5 +1,7 @@
 import 'package:cabsudapp/services/route_page.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../localization/string.dart'; // Make sure the path matches your Strings class
 
 import 'distance_page.dart';
 
@@ -12,47 +14,40 @@ class ServiceSelectionPage extends StatefulWidget {
 
 class _ServiceSelectionPageState extends State<ServiceSelectionPage> {
   String? selectedService;
+  bool _isLanguageLoaded = false;
 
-  // Services data model
-  final List<Map<String, dynamic>> services = [
-    {
-      'name': 'Airport Transport',
-      'imagePath': 'assets/intro/airport_transportation.jpg',
-    },
-    {
-      'name': 'Cruise Transport',
-      'imagePath': 'assets/intro/cruise_transport.jpg',
-    },
-    {
-      'name': 'Train Station Transport',
-      'imagePath': 'assets/intro/gare_transport.jpg',
-    },
-    {
-      'name': 'Car at Disposal',
-      'imagePath': 'assets/intro/mise_a_disposition.jpg',
-    },
-    {
-      'name': 'Tourism',
-      'imagePath': 'assets/intro/tourisem_transport.jpg',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? selectedLanguage = prefs.getString('language');
+
+    if (selectedLanguage == null) {
+      selectedLanguage = 'fr';
+      await prefs.setString('language', 'fr');
+    }
+
+    Strings.load(selectedLanguage);
+
+    setState(() {
+      _isLanguageLoaded = true;
+    });
+  }
 
   void navigateToPage() {
     Widget nextPage;
 
     switch (selectedService) {
       case 'Airport Transport':
-        nextPage = DistanceCalculator();
-        break;
       case 'Cruise Transport':
-        nextPage = DistanceCalculator();
-        break;
       case 'Train Station Transport':
         nextPage = DistanceCalculator();
         break;
       case 'Car at Disposal':
-        nextPage = const RoutePage();
-        break;
       case 'Tourism':
         nextPage = const RoutePage();
         break;
@@ -68,12 +63,47 @@ class _ServiceSelectionPageState extends State<ServiceSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_isLanguageLoaded) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final services = [
+      {
+        'name': Strings.of(context).airportTransport,
+        'key': 'Airport Transport',
+        'imagePath': 'assets/intro/airport_transportation.jpg',
+      },
+      {
+        'name': Strings.of(context).cruiseTransport,
+        'key': 'Cruise Transport',
+        'imagePath': 'assets/intro/cruise_transport.jpg',
+      },
+      {
+        'name': Strings.of(context).trainStationTransport,
+        'key': 'Train Station Transport',
+        'imagePath': 'assets/intro/gare_transport.jpg',
+      },
+      {
+        'name': Strings.of(context).carAtDisposal,
+        'key': 'Car at Disposal',
+        'imagePath': 'assets/intro/mise_a_disposition.jpg',
+      },
+      {
+        'name': Strings.of(context).tourism,
+        'key': 'Tourism',
+        'imagePath': 'assets/intro/tourisem_transport.jpg',
+      },
+    ];
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text(
-          'Select a Service',
-          style: TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold),
+        title: Text(
+          Strings.of(context).selectService,
+          style: const TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.black,
         elevation: 0,
@@ -86,12 +116,12 @@ class _ServiceSelectionPageState extends State<ServiceSelectionPage> {
               itemCount: services.length,
               itemBuilder: (context, index) {
                 final service = services[index];
-                final isSelected = selectedService == service['name'];
+                final isSelected = selectedService == service['key'];
 
                 return GestureDetector(
                   onTap: () {
                     setState(() {
-                      selectedService = service['name'];
+                      selectedService = service['key'];
                     });
                   },
                   child: Container(
@@ -121,21 +151,20 @@ class _ServiceSelectionPageState extends State<ServiceSelectionPage> {
                       child: Column(
                         children: [
                           ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(14)),
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
                             child: Image.asset(
-                              service['imagePath'],
+                              service['imagePath']!,
                               fit: BoxFit.cover,
                               height: 180,
                               width: double.infinity,
                             ),
                           ),
                           if (isSelected)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 8),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
                               child: Text(
-                                'Selected',
-                                style: TextStyle(
+                                Strings.of(context).selected,
+                                style: const TextStyle(
                                   color: Color(0xFFD4AF37),
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -144,11 +173,9 @@ class _ServiceSelectionPageState extends State<ServiceSelectionPage> {
                           Padding(
                             padding: const EdgeInsets.all(16),
                             child: Text(
-                              service['name'],
+                              service['name']!,
                               style: TextStyle(
-                                color: isSelected
-                                    ? const Color(0xFFD4AF37)
-                                    : Colors.white,
+                                color: isSelected ? const Color(0xFFD4AF37) : Colors.white,
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -166,22 +193,33 @@ class _ServiceSelectionPageState extends State<ServiceSelectionPage> {
           if (selectedService != null)
             Padding(
               padding: const EdgeInsets.all(16),
-              child: ElevatedButton(
-                onPressed: navigateToPage,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD4AF37),
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFAE8625), Color(0xFFF7EF8A), Color(0xFFD2AC47), Color(0xFFEDC967)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  minimumSize: const Size(double.infinity, 0),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  'CONTINUE',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                child: ElevatedButton(
+                  onPressed: navigateToPage,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    minimumSize: const Size(double.infinity, 0),
+                  ),
+                  child: Text(
+                    Strings.of(context).continueButton,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
               ),

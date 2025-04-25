@@ -1,14 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:cabsudapp/services/services_type_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cabsudapp/localization/string.dart'; // Assuming your Strings.dart file is properly imported
 
-class ServicesPage extends StatelessWidget {
+class ServicesPage extends StatefulWidget {
   const ServicesPage({Key? key}) : super(key: key);
 
   @override
+  _ServicesPageState createState() => _ServicesPageState();
+}
+
+class _ServicesPageState extends State<ServicesPage> {
+  bool _isLanguageLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? selectedLanguage = prefs.getString('language');
+
+    if (selectedLanguage == null) {
+      // Default to French if no language was selected yet
+      selectedLanguage = 'fr';
+      await prefs.setString('language', 'fr');
+    }
+
+    Strings.load(selectedLanguage);
+
+    setState(() {
+      _isLanguageLoaded = true;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (!_isLanguageLoaded) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nos Prestations'),
+        title: Text(Strings.of(context).servicesTitle),
         backgroundColor: Colors.black,
         centerTitle: true,
         elevation: 2,
@@ -21,64 +59,81 @@ class ServicesPage extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           children: [
             // Service Cards
-            const ServiceCard(
-              title: 'Chauffeur',
-              description: 'Des chauffeurs professionnels, ponctuels et discrets.',
+            ServiceCard(
+              title: Strings.of(context).chauffeurTitle,
+              description: Strings.of(context).chauffeurDesc,
               icon: Icons.directions_car,
             ),
-            const ServiceCard(
-              title: 'Prix fixes',
-              description: 'Tous nos prix sont fixes et connus à l\'avance.',
+            ServiceCard(
+              title: Strings.of(context).prixFixesTitle,
+              description: Strings.of(context).prixFixesDesc,
               icon: Icons.attach_money,
             ),
-            const ServiceCard(
-              title: 'Véhicules',
-              description: 'Voitures récentes, spacieuses et tout confort.',
+            ServiceCard(
+              title: Strings.of(context).vehiculesTitle,
+              description: Strings.of(context).vehiculesDesc,
               icon: Icons.car_repair,
             ),
-            const ServiceCard(
-              title: 'Wifi',
-              description: 'Tous nos véhicules proposent un wifi à bord.',
+            ServiceCard(
+              title: Strings.of(context).wifiTitle,
+              description: Strings.of(context).wifiDesc,
               icon: Icons.wifi,
             ),
-            const ServiceCard(
-              title: 'Enfants',
-              description: 'Siège bébé ou rehausseur gratuit : à la demande.',
+            ServiceCard(
+              title: Strings.of(context).enfantsTitle,
+              description: Strings.of(context).enfantsDesc,
               icon: Icons.child_care,
             ),
-            const ServiceCard(
-              title: 'Paiement',
-              description: 'Paiement en ligne ou à bord du véhicule.',
+            ServiceCard(
+              title: Strings.of(context).paiementTitle,
+              description: Strings.of(context).paiementDesc,
               icon: Icons.payment,
             ),
-            const ServiceCard(
-              title: 'Paiement en ligne sécurisé',
-              description: 'Carte bancaire, American Express.',
+            ServiceCard(
+              title: Strings.of(context).paiementSecuTitle,
+              description: Strings.of(context).paiementSecuDesc,
               icon: Icons.credit_card,
             ),
             const SizedBox(height: 30),
 
-            // Navigate to Home Button
+            // Navigate to Home Button with Gradient
             Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ServiceSelectionPage()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFFAE8625),
+                      Color(0xFFF7EF8A),
+                      Color(0xFFD2AC47),
+                      Color(0xFFEDC967)
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 50),
+                  borderRadius: BorderRadius.circular(30),
                 ),
-                child: const Text(
-                  'Aller à la page d\'accueil',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Color(0xFFD4AF37),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ServiceSelectionPage()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 50),
+                  ),
+                  child: Text(
+                    Strings.of(context).gotoHomeBtn,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.black, // Text color to contrast with gradient
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),

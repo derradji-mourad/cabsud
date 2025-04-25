@@ -1,29 +1,27 @@
 import 'package:flutter/material.dart';
+import '../localization/string.dart'; // <-- Make sure to import this
 
 class IntroPage4 extends StatelessWidget {
   const IntroPage4({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Get screen size
     final screenSize = MediaQuery.of(context).size;
-    final imageWidth = screenSize.width * 0.5; // 50% of screen width
-    final fontSizeTitle = screenSize.width * 0.07; // 7% of screen width
-    final fontSizeDescription = screenSize.width * 0.045; // 4.5% of screen width
+    final imageWidth = screenSize.width * 0.5;
+    final fontSizeTitle = screenSize.width * 0.07;
+    final fontSizeDescription = screenSize.width * 0.045;
+
+    final strings = Strings.of(context); // Get localized strings
 
     return Scaffold(
       body: Stack(
         children: [
-          // Black background
-          Container(
-            color: Colors.black,
-          ),
+          Container(color: Colors.black),
           Center(
             child: SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Image with gold gradient border
                   FutureBuilder(
                     future: precacheImage(
                       const AssetImage('assets/intro/gare_transport.jpg'),
@@ -36,10 +34,10 @@ class IntroPage4 extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                             gradient: const LinearGradient(
                               colors: [
-                                Color(0xFFAEB625), // Gold #AEB625
-                                Color(0xFFF7EF8A), // Gold #F7EF8A
-                                Color(0xFFD2AC47), // Gold #D2AC47
-                                Color(0xFFEDC967), // Gold #EDC967
+                                Color(0xFFAE8625),
+                                Color(0xFFF7EF8A),
+                                Color(0xFFD2AC47),
+                                Color(0xFFEDC967)
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -52,7 +50,7 @@ class IntroPage4 extends StatelessWidget {
                               ),
                             ],
                           ),
-                          padding: const EdgeInsets.all(3), // Border thickness
+                          padding: const EdgeInsets.all(3),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(17),
                             child: Image.asset(
@@ -72,19 +70,15 @@ class IntroPage4 extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
+                            child: CircularProgressIndicator(color: Colors.white),
                           ),
                         );
                       }
                     },
                   ),
-                  SizedBox(height: screenSize.height * 0.04), // 4% of screen height
-
-                  // Title with white text
+                  SizedBox(height: screenSize.height * 0.04),
                   Text(
-                    'TRANSFERT GARE',
+                    strings.trainTransferTitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: fontSizeTitle,
@@ -93,9 +87,7 @@ class IntroPage4 extends StatelessWidget {
                       letterSpacing: 1.5,
                     ),
                   ),
-                  SizedBox(height: screenSize.height * 0.03), // 3% of screen height
-
-                  // Description with gold gradient border
+                  SizedBox(height: screenSize.height * 0.03),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.1),
                     child: Container(
@@ -103,10 +95,10 @@ class IntroPage4 extends StatelessWidget {
                         borderRadius: BorderRadius.circular(15),
                         gradient: const LinearGradient(
                           colors: [
-                            Color(0xFFAEB625), // Gold #AEB625
-                            Color(0xFFF7EF8A), // Gold #F7EF8A
-                            Color(0xFFD2AC47), // Gold #D2AC47
-                            Color(0xFFEDC967), // Gold #EDC967
+                            Color(0xFFAE8625),
+                            Color(0xFFF7EF8A),
+                            Color(0xFFD2AC47),
+                            Color(0xFFEDC967)
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -119,15 +111,15 @@ class IntroPage4 extends StatelessWidget {
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.all(3), // Border thickness
+                      padding: const EdgeInsets.all(3),
                       child: Container(
                         padding: EdgeInsets.all(screenSize.width * 0.05),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          color: Colors.black, // Inner container background
+                          color: Colors.black,
                         ),
                         child: Text(
-                          'Cab-Sud est votre partenaire de choix pour un service de transfert exceptionnel à Marseille. Spécialisée dans le transport de personnes, notre entreprise s’engage à vous fournir une expérience de voyage sans égale, alliant confort, élégance et efficacité.',
+                          strings.trainTransferDescription,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: fontSizeDescription,

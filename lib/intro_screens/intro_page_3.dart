@@ -1,29 +1,64 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../localization/string.dart';
 
-class IntroPage3 extends StatelessWidget {
+class IntroPage3 extends StatefulWidget {
   const IntroPage3({super.key});
 
   @override
+  State<IntroPage3> createState() => _IntroPage3State();
+}
+
+class _IntroPage3State extends State<IntroPage3> {
+  bool _isLanguageLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? selectedLanguage = prefs.getString('language');
+
+    if (selectedLanguage == null) {
+      selectedLanguage = 'fr'; // Default to French
+      await prefs.setString('language', 'fr');
+    }
+
+    Strings.load(selectedLanguage);
+
+    setState(() {
+      _isLanguageLoaded = true;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Get screen size
+    if (!_isLanguageLoaded) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+        backgroundColor: Colors.black,
+      );
+    }
+
     final screenSize = MediaQuery.of(context).size;
-    final imageWidth = screenSize.width * 0.5; // 50% of screen width
-    final fontSizeTitle = screenSize.width * 0.07; // 7% of screen width
-    final fontSizeDescription = screenSize.width * 0.045; // 4.5% of screen width
+    final imageWidth = screenSize.width * 0.5;
+    final fontSizeTitle = screenSize.width * 0.07;
+    final fontSizeDescription = screenSize.width * 0.045;
 
     return Scaffold(
       body: Stack(
         children: [
-          // Solid black background
-          Container(
-            color: Colors.black,
-          ),
+          Container(color: Colors.black),
           Center(
             child: SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Image with gold gradient border
                   FutureBuilder(
                     future: precacheImage(
                       const AssetImage('assets/intro/cruise_transport.jpg'),
@@ -36,10 +71,10 @@ class IntroPage3 extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                             gradient: const LinearGradient(
                               colors: [
-                                Color(0xFFAEB625), // Gold #AEB625
-                                Color(0xFFF7EF8A), // Gold #F7EF8A
-                                Color(0xFFD2AC47), // Gold #D2AC47
-                                Color(0xFFEDC967), // Gold #EDC967
+                                Color(0xFFAE8625),
+                                Color(0xFFF7EF8A),
+                                Color(0xFFD2AC47),
+                                Color(0xFFEDC967),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -48,15 +83,15 @@ class IntroPage3 extends StatelessWidget {
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.5),
                                 blurRadius: 10,
-                                offset: const Offset(0, 5),
+                                offset: Offset(0, 5),
                               ),
                             ],
                           ),
-                          padding: const EdgeInsets.all(3), // Border thickness
+                          padding: const EdgeInsets.all(3),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(17),
                             child: Image.asset(
-                              'assets/intro/cruise_transport.jpg', // Replace with your image path
+                              'assets/intro/cruise_transport.jpg',
                               width: imageWidth,
                               height: imageWidth,
                               fit: BoxFit.cover,
@@ -72,19 +107,15 @@ class IntroPage3 extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
+                            child: CircularProgressIndicator(color: Colors.white),
                           ),
                         );
                       }
                     },
                   ),
-                  SizedBox(height: screenSize.height * 0.04), // 4% of screen height
-
-                  // Title with white text
+                  SizedBox(height: screenSize.height * 0.04),
                   Text(
-                    'TRANSFERT PORT DE CROISIÈRE',
+                    Strings.of(context).cruiseTransferTitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: fontSizeTitle,
@@ -92,9 +123,7 @@ class IntroPage3 extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: screenSize.height * 0.03), // 3% of screen height
-
-                  // Description with gold gradient border
+                  SizedBox(height: screenSize.height * 0.03),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.1),
                     child: Container(
@@ -102,10 +131,10 @@ class IntroPage3 extends StatelessWidget {
                         borderRadius: BorderRadius.circular(15),
                         gradient: const LinearGradient(
                           colors: [
-                            Color(0xFFAEB625), // Gold #AEB625
-                            Color(0xFFF7EF8A), // Gold #F7EF8A
-                            Color(0xFFD2AC47), // Gold #D2AC47
-                            Color(0xFFEDC967), // Gold #EDC967
+                            Color(0xFFAE8625),
+                            Color(0xFFF7EF8A),
+                            Color(0xFFD2AC47),
+                            Color(0xFFEDC967),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -114,19 +143,19 @@ class IntroPage3 extends StatelessWidget {
                           BoxShadow(
                             color: Colors.black.withOpacity(0.5),
                             blurRadius: 10,
-                            offset: const Offset(0, 5),
+                            offset: Offset(0, 5),
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.all(3), // Border thickness
+                      padding: const EdgeInsets.all(3),
                       child: Container(
                         padding: EdgeInsets.all(screenSize.width * 0.05),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          color: Colors.black, // Inner container background
+                          color: Colors.black,
                         ),
                         child: Text(
-                          'Cab-Sud, votre prestataire de choix pour un service de transfert impeccable depuis et vers le port de croisière de Marseille, vous propose une expérience de transport de personnes sur mesure, alliant confort, ponctualité et efficacité.',
+                          Strings.of(context).cruiseTransferDescription,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: fontSizeDescription,

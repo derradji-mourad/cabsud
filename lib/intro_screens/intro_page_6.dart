@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import '../localization/string.dart';
 
 class IntroPage6 extends StatelessWidget {
   const IntroPage6({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Get screen size
     final screenSize = MediaQuery.of(context).size;
-    final imageWidth = screenSize.width * 0.5; // 50% of screen width
-    final fontSizeTitle = screenSize.width * 0.07; // 7% of screen width
-    final fontSizeDescription = screenSize.width * 0.045; // 4.5% of screen width
+    final imageWidth = screenSize.width * 0.5;
+    final fontSizeTitle = screenSize.width * 0.07;
+    final fontSizeDescription = screenSize.width * 0.045;
 
     return Scaffold(
       body: Stack(
@@ -36,10 +36,10 @@ class IntroPage6 extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                             gradient: const LinearGradient(
                               colors: [
-                                Color(0xFFAEB625), // Gold
-                                Color(0xFFF7EF8A), // Light Gold
-                                Color(0xFFD2AC47), // Gold
-                                Color(0xFFEDC967), // Gold
+                                Color(0xFFAE8625),
+                                Color(0xFFF7EF8A),
+                                Color(0xFFD2AC47),
+                                Color(0xFFEDC967)
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -52,7 +52,7 @@ class IntroPage6 extends StatelessWidget {
                               ),
                             ],
                           ),
-                          padding: const EdgeInsets.all(3), // Border thickness
+                          padding: const EdgeInsets.all(3),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(17),
                             child: Image.asset(
@@ -80,11 +80,12 @@ class IntroPage6 extends StatelessWidget {
                       }
                     },
                   ),
-                  SizedBox(height: screenSize.height * 0.04), // 4% of screen height
+                  SizedBox(height: screenSize.height * 0.04),
 
-                  // Title with white text
+                  // Title from Strings
                   Text(
-                    'MISE À DISPOSITION',
+                    Strings.of(context).introTitle6,
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: fontSizeTitle,
                       fontWeight: FontWeight.bold,
@@ -92,9 +93,9 @@ class IntroPage6 extends StatelessWidget {
                       letterSpacing: 1.5,
                     ),
                   ),
-                  SizedBox(height: screenSize.height * 0.03), // 3% of screen height
+                  SizedBox(height: screenSize.height * 0.03),
 
-                  // Description with gold gradient border
+                  // Description from Strings
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.1),
                     child: Container(
@@ -102,10 +103,10 @@ class IntroPage6 extends StatelessWidget {
                         borderRadius: BorderRadius.circular(15),
                         gradient: const LinearGradient(
                           colors: [
-                            Color(0xFFAEB625), // Gold
-                            Color(0xFFF7EF8A), // Light Gold
-                            Color(0xFFD2AC47), // Gold
-                            Color(0xFFEDC967), // Gold
+                            Color(0xFFAE8625),
+                            Color(0xFFF7EF8A),
+                            Color(0xFFD2AC47),
+                            Color(0xFFEDC967)
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -118,15 +119,15 @@ class IntroPage6 extends StatelessWidget {
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.all(3), // Border thickness
+                      padding: const EdgeInsets.all(3),
                       child: Container(
                         padding: EdgeInsets.all(screenSize.width * 0.05),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          color: Colors.black, // Inner container background
+                          color: Colors.black,
                         ),
                         child: Text(
-                          'Que ce soit pour des rendez-vous d’affaires, des séminaires ou des congrès, notre flotte de véhicules haut de gamme garantit un trajet confortable, sécurisé et élégant.',
+                          Strings.of(context).introDescription6,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: fontSizeDescription,

@@ -37,7 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   smooth_page_indicator: ^1.2.0+3
   flutter_native_splash: ^2.4.2
-  google_maps_flutter: ^2.10.0
+
   geolocator: ^13.0.2
   flutter_polyline_points: ^2.1.0
   google_places_flutter: ^2.0.9
@@ -46,6 +46,19 @@ dependencies:
   permission_handler: ^11.3.1
   geocoding: ^2.1.1
   flutter_dotenv: ^5.1.0
+  flutter_stripe: ^11.4.0
+  supabase_flutter: ^2.8.4
+  font_awesome_flutter: ^10.8.0
+  google_maps_flutter: ^2.12.1
+  flutter_launcher_icons: "^0.14.3"
+  lottie: ^2.6.0
+  intl: ^0.18.1
+
+flutter_launcher_icons:
+    android: "launcher_icon"
+    ios: true
+    image_path: "assets/logo/logo4.png"
+
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +87,9 @@ flutter:
    - assets/intro/
    - assets/logo/
    - assets/cars/
+   - assets/authnfication/
+   - assets/animation/
+   - assets/paiement/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

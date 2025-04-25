@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../localization/string.dart'; // Assure-toi d'importer la bonne classe Strings
 
 class IntroPage5 extends StatelessWidget {
   const IntroPage5({super.key});
@@ -7,9 +8,9 @@ class IntroPage5 extends StatelessWidget {
   Widget build(BuildContext context) {
     // Get screen size
     final screenSize = MediaQuery.of(context).size;
-    final imageWidth = screenSize.width * 0.5; // 50% of screen width
-    final fontSizeTitle = screenSize.width * 0.07; // 7% of screen width
-    final fontSizeDescription = screenSize.width * 0.045; // 4.5% of screen width
+    final imageWidth = screenSize.width * 0.5;
+    final fontSizeTitle = screenSize.width * 0.07;
+    final fontSizeDescription = screenSize.width * 0.045;
 
     return Scaffold(
       body: Stack(
@@ -36,10 +37,10 @@ class IntroPage5 extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                             gradient: const LinearGradient(
                               colors: [
-                                Color(0xFFAEB625), // Gold #AEB625
-                                Color(0xFFF7EF8A), // Gold #F7EF8A
-                                Color(0xFFD2AC47), // Gold #D2AC47
-                                Color(0xFFEDC967), // Gold #EDC967
+                                Color(0xFFAE8625),
+                                Color(0xFFF7EF8A),
+                                Color(0xFFD2AC47),
+                                Color(0xFFEDC967)
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -52,7 +53,7 @@ class IntroPage5 extends StatelessWidget {
                               ),
                             ],
                           ),
-                          padding: const EdgeInsets.all(3), // Border thickness
+                          padding: const EdgeInsets.all(3),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(17),
                             child: Image.asset(
@@ -80,11 +81,12 @@ class IntroPage5 extends StatelessWidget {
                       }
                     },
                   ),
-                  SizedBox(height: screenSize.height * 0.04), // 4% of screen height
+                  SizedBox(height: screenSize.height * 0.04),
 
-                  // Title with white text
+                  // Title from Strings
                   Text(
-                    'Bienvenue sur Cab-Sud',
+                    Strings.of(context).introTitle5,
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: fontSizeTitle,
                       fontWeight: FontWeight.bold,
@@ -92,9 +94,9 @@ class IntroPage5 extends StatelessWidget {
                       letterSpacing: 1.5,
                     ),
                   ),
-                  SizedBox(height: screenSize.height * 0.03), // 3% of screen height
+                  SizedBox(height: screenSize.height * 0.03),
 
-                  // Description with gold gradient border
+                  // Description from Strings
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.1),
                     child: Container(
@@ -102,10 +104,10 @@ class IntroPage5 extends StatelessWidget {
                         borderRadius: BorderRadius.circular(15),
                         gradient: const LinearGradient(
                           colors: [
-                            Color(0xFFAEB625), // Gold #AEB625
-                            Color(0xFFF7EF8A), // Gold #F7EF8A
-                            Color(0xFFD2AC47), // Gold #D2AC47
-                            Color(0xFFEDC967), // Gold #EDC967
+                            Color(0xFFAE8625),
+                            Color(0xFFF7EF8A),
+                            Color(0xFFD2AC47),
+                            Color(0xFFEDC967)
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -118,15 +120,15 @@ class IntroPage5 extends StatelessWidget {
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.all(3), // Border thickness
+                      padding: const EdgeInsets.all(3),
                       child: Container(
                         padding: EdgeInsets.all(screenSize.width * 0.05),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          color: Colors.black, // Inner container background
+                          color: Colors.black,
                         ),
                         child: Text(
-                          'Cab-Sud se distingue comme une société de transport de personnes haut de gamme, offrant une expérience touristique inégalée à Marseille et dans sa région. Nos services sont spécialement conçus pour les voyageurs désirant explorer les trésors cachés de Marseille dans le confort et l’élégance.',
+                          Strings.of(context).introDescription5,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: fontSizeDescription,

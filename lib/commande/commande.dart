@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:cabsudapp/commande/type_of_paiment.dart';
+import 'package:cabsudapp/commande/succed.dart'; // Add this if not already imported
 
 class CommandePage extends StatelessWidget {
-  CommandePage({Key? key}) : super(key: key);
+  final String origin; // Accept origin parameter: 'route' or 'distance'
+
+  CommandePage({Key? key, required this.origin}) : super(key: key);
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -33,145 +37,93 @@ class CommandePage extends StatelessWidget {
           key: _formKey,
           child: ListView(
             children: [
-              // First Name
               buildTextField(
                 label: 'First Name*',
                 controller: firstNameController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your first name';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter your first name' : null,
               ),
-              // Last Name
               buildTextField(
                 label: 'Last Name*',
                 controller: lastNameController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your last name';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter your last name' : null,
               ),
-              // Company Name (optional)
               buildTextField(
                 label: 'Company Name (optional)',
                 controller: companyNameController,
               ),
-              // Country/Region
               buildTextField(
                 label: 'Country/Region*',
                 controller: countryController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your country/region';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter your country/region' : null,
               ),
-              // Street Address
               buildTextField(
                 label: 'Street Address*',
                 controller: addressController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your street address';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter your street address' : null,
               ),
-              // Town/City
               buildTextField(
                 label: 'Town/City*',
                 controller: cityController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your town/city';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter your town/city' : null,
               ),
-              // Postcode/ZIP
               buildTextField(
                 label: 'Postcode/ZIP*',
                 controller: postcodeController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your postcode/ZIP';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter your postcode/ZIP' : null,
               ),
-              // Phone
               buildTextField(
                 label: 'Phone*',
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your phone number';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
               ),
-              // Email Address
               buildTextField(
                 label: 'Email Address*',
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty || !value.contains('@')) {
-                    return 'Please enter a valid email address';
-                  }
-                  return null;
-                },
+                validator: (value) =>
+                value == null || value.isEmpty || !value.contains('@') ? 'Please enter a valid email address' : null,
               ),
-              // Additional Information
               buildTextField(
                 label: 'Additional Information',
                 controller: additionalInfoController,
                 maxLines: 3,
               ),
-              // Number of Passengers
               buildTextField(
                 label: 'Nombre de Passager(s)*',
                 controller: passengersController,
                 keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the number of passengers';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter the number of passengers' : null,
               ),
-              // Number of Bags
               buildTextField(
                 label: 'Nombre de Bagage(s)*',
                 controller: bagsController,
                 keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the number of bags';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter the number of bags' : null,
               ),
-              // Extra Information (optional)
               buildTextField(
                 label: 'Information Complémentaire (optional)',
                 controller: extraInfoController,
                 maxLines: 3,
               ),
-              // Submit Button
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    // Handle form submission
+                    if (origin == 'route') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SuccessPage()),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const TypeOfPaimentPage()),
+                      );
+                    }
+                  } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Commande Submitted!')),
+                      const SnackBar(content: Text('Please fill all required fields')),
                     );
                   }
                 },
@@ -179,7 +131,7 @@ class CommandePage extends StatelessWidget {
                   backgroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    side: const BorderSide(color: Color(0xFFD4AF37), width: 2), // Gold border
+                    side: const BorderSide(color: Color(0xFFD4AF37), width: 2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
@@ -195,7 +147,6 @@ class CommandePage extends StatelessWidget {
     );
   }
 
-  // Helper method to build TextFields
   Widget buildTextField({
     required String label,
     required TextEditingController controller,
@@ -215,11 +166,11 @@ class CommandePage extends StatelessWidget {
           labelText: label,
           labelStyle: const TextStyle(color: Colors.white),
           enabledBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 1.5), // Gold border
+            borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 1.5),
             borderRadius: BorderRadius.circular(8),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 2), // Gold border
+            borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 2),
             borderRadius: BorderRadius.circular(8),
           ),
           errorBorder: OutlineInputBorder(

@@ -1,3 +1,4 @@
+import 'package:cabsudapp/authentification/sing_up.dart';
 import 'package:cabsudapp/intro_screens/intro_page_1.dart';
 import 'package:cabsudapp/intro_screens/intro_page_2.dart';
 import 'package:cabsudapp/intro_screens/intro_page_3.dart';
@@ -7,7 +8,9 @@ import 'package:cabsudapp/intro_screens/intro_page_6.dart';
 import 'package:cabsudapp/services/services_page.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:cabsudapp/localization/string.dart'; // Import the Strings class
 
+import 'commande/payment.dart';
 import 'home_page.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -76,8 +79,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       onTap: () {
                         _controller.jumpToPage(5);
                       },
-                      child: const Text(
-                        'SKIP',
+                      child: Text(
+                        Strings.of(context).skipButton, // Use the translated string
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
@@ -103,7 +106,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ? () {
                         Navigator.push(context,
                             MaterialPageRoute(builder: (context) {
-                              return ServicesPage();
+                              return SignUpScreen();
                             }));
                       }
                           : () {
@@ -113,7 +116,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         );
                       },
                       child: Text(
-                        onLastPage ? 'GET STARTED' : 'NEXT',
+                        onLastPage
+                            ? Strings.of(context).getStartedButton // Use the translated string
+                            : Strings.of(context).nextButton, // Use the translated string
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
