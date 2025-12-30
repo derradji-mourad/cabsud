@@ -1,146 +1,340 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../localization/string.dart';
 
-class IntroPage2 extends StatelessWidget {
+class _LuxuryColors {
+  static const goldLight = Color(0xFFF7EF8A);
+  static const goldMedium = Color(0xFFD4AF37);
+  static const goldDark = Color(0xFFAE8625);
+  static const goldAccent = Color(0xFFEDC967);
+  static const backgroundDark = Color(0xFF0A0A0A);
+  static const backgroundMedium = Color(0xFF121212);
+}
+
+class IntroPage2 extends StatefulWidget {
   const IntroPage2({super.key});
 
   @override
+  State<IntroPage2> createState() => _IntroPage2State();
+}
+
+class _IntroPage2State extends State<IntroPage2>
+    with SingleTickerProviderStateMixin {
+  bool _isLanguageLoaded = false;
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAnimations();
+    _loadLanguage();
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  void _initializeAnimations() {
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
+    );
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final selectedLanguage = prefs.getString('language') ?? 'fr';
+
+    if (!prefs.containsKey('language')) {
+      await prefs.setString('language', selectedLanguage);
+    }
+
+    Strings.load(selectedLanguage);
+
+    if (mounted) {
+      setState(() => _isLanguageLoaded = true);
+      _fadeController.forward();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Get screen size
+    if (!_isLanguageLoaded) {
+      return Scaffold(
+        backgroundColor: _LuxuryColors.backgroundDark,
+        body: const Center(child: _LuxuryLoadingIndicator()),
+      );
+    }
+
     final screenSize = MediaQuery.of(context).size;
-    final imageWidth = screenSize.width * 0.5; // 50% of screen width
-    final fontSizeTitle = screenSize.width * 0.07; // 7% of screen width
-    final fontSizeDescription = screenSize.width * 0.045; // 4.5% of screen width
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final imageSize = screenSize.width * 0.55;
+    final titleFontSize = screenSize.width * 0.068;
+    final descriptionFontSize = screenSize.width * 0.042;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Solid black background
-          Container(
-            color: Colors.black,
+      backgroundColor: _LuxuryColors.backgroundDark,
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                _LuxuryColors.backgroundDark,
+                _LuxuryColors.backgroundMedium,
+                _LuxuryColors.backgroundDark,
+              ],
+            ),
           ),
-          Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Adaptive image size with gold gradient border
-                  FutureBuilder(
-                    future: precacheImage(
-                      const AssetImage('assets/intro/airport_transportation.jpg'),
-                      context,
+          child: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenSize.width * 0.05,
+                  vertical: screenSize.height * 0.03,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _LuxuryImageCard(
+                      imagePath: 'assets/intro/airport_transportation.jpg',
+                      size: imageSize,
+                      cacheSize: (imageSize * devicePixelRatio).round(),
                     ),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFFAEB625), // Gold #AEB625
-                                Color(0xFFF7EF8A), // Gold #F7EF8A
-                                Color(0xFFD2AC47), // Gold #D2AC47
-                                Color(0xFFEDC967), // Gold #EDC967
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.5),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(3), // Border thickness
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(17),
-                            child: Image.asset(
-                              'assets/intro/airport_transportation.jpg', // Replace with your image path
-                              width: imageWidth,
-                              height: imageWidth,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        );
-                      } else {
-                        return Container(
-                          width: imageWidth,
-                          height: imageWidth,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade900,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                  SizedBox(height: screenSize.height * 0.04), // 4% of screen height
-
-                  // Adaptive title text
-                  Text(
-                    'TRANSFERT AÉROPORT',
-                    style: TextStyle(
-                      fontSize: fontSizeTitle,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                    SizedBox(height: screenSize.height * 0.05),
+                    _LuxuryTitle(
+                      text: Strings.of(context).airportTransferTitle,
+                      fontSize: titleFontSize,
                     ),
-                  ),
-                  SizedBox(height: screenSize.height * 0.03), // 3% of screen height
-
-                  // Description with gold gradient border
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.1),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFFAEB625), // Gold #AEB625
-                            Color(0xFFF7EF8A), // Gold #F7EF8A
-                            Color(0xFFD2AC47), // Gold #D2AC47
-                            Color(0xFFEDC967), // Gold #EDC967
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(3), // Border thickness
-                      child: Container(
-                        padding: EdgeInsets.all(screenSize.width * 0.05),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: Colors.black, // Inner container background
-                        ),
-                        child: Text(
-                          'La Cab-Sud est votre partenaire de choix pour un service de transfert aéroport exceptionnel à Marseille. Spécialisée dans le transport de personnes, notre entreprise s’engage à vous fournir une expérience de voyage sans égale, alliant confort, élégance et efficacité.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: fontSizeDescription,
-                            color: Colors.white,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
+                    SizedBox(height: screenSize.height * 0.03),
+                    _LuxuryDescriptionCard(
+                      text: Strings.of(context).airportTransferDescription,
+                      fontSize: descriptionFontSize,
+                      horizontalPadding: screenSize.width * 0.08,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LuxuryLoadingIndicator extends StatelessWidget {
+  const _LuxuryLoadingIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(
+          width: 50,
+          height: 50,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            valueColor: AlwaysStoppedAnimation<Color>(_LuxuryColors.goldMedium),
+          ),
+        ),
+        const SizedBox(height: 24),
+        ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [_LuxuryColors.goldDark, _LuxuryColors.goldLight],
+          ).createShader(bounds),
+          child: const Text(
+            'CHARGEMENT...',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 2.5,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LuxuryImageCard extends StatelessWidget {
+  final String imagePath;
+  final double size;
+  final int cacheSize;
+
+  const _LuxuryImageCard({
+    required this.imagePath,
+    required this.size,
+    required this.cacheSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: FutureBuilder(
+        future: precacheImage(AssetImage(imagePath), context),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                gradient: const LinearGradient(
+                  colors: [
+                    _LuxuryColors.goldDark,
+                    _LuxuryColors.goldLight,
+                    _LuxuryColors.goldMedium,
+                    _LuxuryColors.goldAccent,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _LuxuryColors.goldMedium.withOpacity(0.3),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
+                    spreadRadius: -4,
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 32,
+                    offset: const Offset(0, 16),
+                    spreadRadius: -8,
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(3.5),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20.5),
+                child: Image.asset(
+                  imagePath,
+                  width: size,
+                  height: size,
+                  fit: BoxFit.cover,
+                  cacheWidth: cacheSize,
+                  cacheHeight: cacheSize,
+                ),
+              ),
+            );
+          }
+          return Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: _LuxuryColors.backgroundMedium,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(_LuxuryColors.goldLight),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _LuxuryTitle extends StatelessWidget {
+  final String text;
+  final double fontSize;
+
+  const _LuxuryTitle({required this.text, required this.fontSize});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      shaderCallback: (bounds) => const LinearGradient(
+        colors: [
+          _LuxuryColors.goldLight,
+          _LuxuryColors.goldAccent,
+          _LuxuryColors.goldMedium,
         ],
+      ).createShader(bounds),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          letterSpacing: 1.2,
+          height: 1.3,
+        ),
+      ),
+    );
+  }
+}
+
+class _LuxuryDescriptionCard extends StatelessWidget {
+  final String text;
+  final double fontSize;
+  final double horizontalPadding;
+
+  const _LuxuryDescriptionCard({
+    required this.text,
+    required this.fontSize,
+    required this.horizontalPadding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            colors: [
+              _LuxuryColors.goldDark,
+              _LuxuryColors.goldLight,
+              _LuxuryColors.goldMedium,
+              _LuxuryColors.goldAccent,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _LuxuryColors.goldMedium.withOpacity(0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+              spreadRadius: -4,
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(3.5),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.5),
+            color: _LuxuryColors.backgroundDark,
+          ),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: fontSize,
+              color: Colors.white.withOpacity(0.9),
+              height: 1.6,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
       ),
     );
   }

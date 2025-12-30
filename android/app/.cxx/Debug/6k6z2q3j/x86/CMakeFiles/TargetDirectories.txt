@@ -1,0 +1,2 @@
+C:/Users/moura/StudioProjects/cabsudapp/android/app/.cxx/Debug/6k6z2q3j/x86/CMakeFiles/edit_cache.dir
+C:/Users/moura/StudioProjects/cabsudapp/android/app/.cxx/Debug/6k6z2q3j/x86/CMakeFiles/rebuild_cache.dir

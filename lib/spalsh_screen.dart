@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:cabsudapp/onboarding_screen.dart'; // replace with the actual home screen
+import 'package:cabsudapp/onboarding_screen.dart'; // Replace with your actual onboarding screen import
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  SplashScreenState createState() => SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
+class SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
 
   @override
   void initState() {
@@ -22,12 +24,21 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     _controller.forward();
 
-    // Navigate to home screen after splash duration
-    Future.delayed(const Duration(seconds: 5), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => OnboardingScreen()),
-      );
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _navigateToNextScreen();
+      }
     });
+  }
+
+  Future<void> _navigateToNextScreen() async {
+    // Optional extra delay after animation
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+    );
   }
 
   @override
@@ -39,13 +50,23 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color.fromRGBO(3, 5, 17, 1),
       body: Center(
         child: FadeTransition(
           opacity: _animation,
-          child: Image.asset('assets/logo/logo5.png'), // place your logo here
+          child: Image.asset(
+            'assets/logo/logo4-.png', // Replace with your logo asset path
+            gaplessPlayback: true,
+          ),
         ),
       ),
     );
   }
+}
+
+void main() {
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: SplashScreen(),
+  ));
 }
