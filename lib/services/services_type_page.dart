@@ -76,7 +76,8 @@ class _ServiceSelectionPageState extends State<ServiceSelectionPage>
     HapticFeedback.mediumImpact();
     Navigator.of(context).push(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => destinations[index],
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            destinations[index],
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: CurvedAnimation(
@@ -146,10 +147,10 @@ class _ServiceSelectionPageState extends State<ServiceSelectionPage>
         children: [
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.charcoal.withOpacity(0.5),
+              color: AppTheme.charcoal.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: AppTheme.primaryGold.withOpacity(0.2),
+                color: AppTheme.primaryGold.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
@@ -203,7 +204,7 @@ class _ServiceSelectionPageState extends State<ServiceSelectionPage>
             'Swipe to explore premium services',
             style: TextStyle(
               fontSize: 16,
-              color: AppTheme.offWhite.withOpacity(0.6),
+              color: AppTheme.offWhite.withValues(alpha: 0.6),
               letterSpacing: 0.3,
             ),
           ),
@@ -262,10 +263,11 @@ class _ServiceSelectionPageState extends State<ServiceSelectionPage>
               decoration: BoxDecoration(
                 gradient: isActive
                     ? const LinearGradient(
-                  colors: [AppTheme.primaryGold, AppTheme.accentGold],
-                )
+                        colors: [AppTheme.primaryGold, AppTheme.accentGold],
+                      )
                     : null,
-                color: isActive ? null : AppTheme.offWhite.withOpacity(0.3),
+                color:
+                    isActive ? null : AppTheme.offWhite.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
             );
@@ -385,13 +387,13 @@ class _HeroServiceCardState extends State<_HeroServiceCard> {
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: widget.service.color.withOpacity(0.3),
+                color: widget.service.color.withValues(alpha: 0.3),
                 blurRadius: 40,
                 offset: const Offset(0, 20),
                 spreadRadius: -5,
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.6),
+                color: Colors.black.withValues(alpha: 0.6),
                 blurRadius: 50,
                 offset: const Offset(0, 30),
                 spreadRadius: -10,
@@ -412,7 +414,7 @@ class _HeroServiceCardState extends State<_HeroServiceCard> {
                     child: Icon(
                       widget.service.icon,
                       size: 100,
-                      color: widget.service.color.withOpacity(0.3),
+                      color: widget.service.color.withValues(alpha: 0.3),
                     ),
                   ),
                 ),
@@ -424,9 +426,9 @@ class _HeroServiceCardState extends State<_HeroServiceCard> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withOpacity(0.2),
-                        Colors.black.withOpacity(0.5),
-                        Colors.black.withOpacity(0.95),
+                        Colors.black.withValues(alpha: 0.2),
+                        Colors.black.withValues(alpha: 0.5),
+                        Colors.black.withValues(alpha: 0.95),
                       ],
                       stops: const [0.0, 0.4, 1.0],
                     ),
@@ -448,7 +450,8 @@ class _HeroServiceCardState extends State<_HeroServiceCard> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: widget.service.color.withOpacity(0.5),
+                              color:
+                                  widget.service.color.withValues(alpha: 0.5),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -470,10 +473,10 @@ class _HeroServiceCardState extends State<_HeroServiceCard> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: widget.service.color.withOpacity(0.2),
+                          color: widget.service.color.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: widget.service.color.withOpacity(0.5),
+                            color: widget.service.color.withValues(alpha: 0.5),
                             width: 1,
                           ),
                         ),
@@ -514,14 +517,14 @@ class _HeroServiceCardState extends State<_HeroServiceCard> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               letterSpacing: 1.2,
                             ),
                           ),
                           const SizedBox(width: 8),
                           Icon(
                             Icons.arrow_forward_rounded,
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                             size: 18,
                           ),
                         ],
@@ -580,7 +583,7 @@ class _ElegantButtonState extends State<_ElegantButton> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primaryGold.withOpacity(0.5),
+                color: AppTheme.primaryGold.withValues(alpha: 0.5),
                 blurRadius: 30,
                 offset: const Offset(0, 15),
               ),

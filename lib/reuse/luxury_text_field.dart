@@ -42,7 +42,7 @@ class LuxuryTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryGold.withOpacity(0.1),
+              color: AppTheme.primaryGold.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -56,7 +56,7 @@ class LuxuryTextField extends StatelessWidget {
           inputFormatters: inputFormatters,
           // FIXED: Explicit white text color for input
           style: const TextStyle(
-            color: AppTheme.softWhite,  // White text while typing
+            color: AppTheme.softWhite, // White text while typing
             fontSize: 16,
             fontWeight: FontWeight.w400,
           ),
@@ -67,7 +67,7 @@ class LuxuryTextField extends StatelessWidget {
             prefixIcon: prefixIcon,
             // These are inherited from theme but explicit for clarity
             labelStyle: TextStyle(
-              color: AppTheme.offWhite.withOpacity(0.8),
+              color: AppTheme.offWhite.withValues(alpha: 0.8),
               fontSize: 14,
             ),
             floatingLabelStyle: const TextStyle(
@@ -75,7 +75,7 @@ class LuxuryTextField extends StatelessWidget {
               fontSize: 14,
             ),
             hintStyle: TextStyle(
-              color: AppTheme.offWhite.withOpacity(0.5),
+              color: AppTheme.offWhite.withValues(alpha: 0.5),
             ),
           ),
         ),

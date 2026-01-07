@@ -4,17 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../commande/commande.dart';
 import '../custom_page_route.dart';
 import '../localization/string.dart';
+import 'package:cabsudapp/reuse/theme.dart';
 
 /// Luxury color palette for consistent theming
-class _LuxuryColors {
-  static const goldLight = Color(0xFFF7EF8A);
-  static const goldMedium = Color(0xFFD4AF37);
-  static const goldDark = Color(0xFFAE8625);
-  static const goldAccent = Color(0xFFEDC967);
-  static const backgroundDark = Color(0xFF0A0A0A);
-  static const backgroundMedium = Color(0xFF121212);
-  static const cardBackground = Color(0xFF1A1A1A);
-}
+// Removed _LuxuryColors class as we now use AppTheme
 
 /// Premium vehicle selection page with luxury animations and optimized performance.
 ///
@@ -86,7 +79,7 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
     // Create staggered entrance animations for each card
     _cardAnimationControllers = List.generate(
       _vehicles.length,
-          (index) => AnimationController(
+      (index) => AnimationController(
         vsync: this,
         duration: const Duration(milliseconds: 600),
       ),
@@ -117,7 +110,6 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
 
   List<_VehicleModel> _buildVehicleList() {
     final strings = Strings.of(context);
-    final isFromDistance = widget.origin == 'distance';
 
     if (widget.totalFares != null) {
       return widget.totalFares!.map((fare) {
@@ -234,13 +226,13 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
     HapticFeedback.mediumImpact();
 
     final selectedVehicle = _vehicles.firstWhere(
-          (vehicle) => vehicle.type == _selectedVehicleType,
+      (vehicle) => vehicle.type == _selectedVehicleType,
     );
 
     final prefs = await SharedPreferences.getInstance();
 
     // Save vehicle details
-    await prefs.setString('selectedVehicleType', selectedVehicle.type);
+    await prefs.setString('selectedVehicleType', selectedVehicle.vehicleKey);
     await prefs.setString('selectedVehicleDesc', selectedVehicle.description);
     await prefs.setInt('passengers', selectedVehicle.passengers);
     await prefs.setInt('bags', selectedVehicle.bags);
@@ -272,14 +264,14 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
   @override
   Widget build(BuildContext context) {
     if (!_isLanguageLoaded) {
-      return Scaffold(
-        backgroundColor: _LuxuryColors.backgroundDark,
-        body: const Center(child: _LuxuryLoadingIndicator()),
+      return const Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Center(child: _LuxuryLoadingIndicator()),
       );
     }
 
     return Scaffold(
-      backgroundColor: _LuxuryColors.backgroundDark,
+      backgroundColor: AppTheme.background,
       appBar: _buildLuxuryAppBar(),
       body: Column(
         children: [
@@ -308,7 +300,7 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
       centerTitle: true,
       backgroundColor: Colors.transparent,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, color: _LuxuryColors.goldMedium),
+        icon: const Icon(Icons.arrow_back_ios_new, color: AppTheme.primary),
         onPressed: () {
           HapticFeedback.lightImpact();
           Navigator.of(context).pop();
@@ -317,9 +309,9 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
       title: ShaderMask(
         shaderCallback: (bounds) => const LinearGradient(
           colors: [
-            _LuxuryColors.goldDark,
-            _LuxuryColors.goldLight,
-            _LuxuryColors.goldMedium,
+            AppTheme.secondary,
+            AppTheme.primary,
+            AppTheme.primary,
           ],
         ).createShader(bounds),
         child: Text(
@@ -336,8 +328,8 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              _LuxuryColors.backgroundDark,
-              _LuxuryColors.backgroundMedium.withOpacity(0.95),
+              AppTheme.background,
+              AppTheme.card.withValues(alpha: 0.95),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -395,13 +387,13 @@ class _LuxuryLoadingIndicator extends StatelessWidget {
           height: 50,
           child: CircularProgressIndicator(
             strokeWidth: 2.5,
-            valueColor: AlwaysStoppedAnimation<Color>(_LuxuryColors.goldMedium),
+            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
           ),
         ),
         const SizedBox(height: 24),
         ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
-            colors: [_LuxuryColors.goldDark, _LuxuryColors.goldLight],
+            colors: [AppTheme.secondary, AppTheme.primary],
           ).createShader(bounds),
           child: const Text(
             'CHARGEMENT...',
@@ -515,21 +507,21 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
             borderRadius: BorderRadius.circular(24),
             gradient: widget.isSelected
                 ? const LinearGradient(
-              colors: [
-                _LuxuryColors.goldDark,
-                _LuxuryColors.goldLight,
-                _LuxuryColors.goldAccent,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            )
+                    colors: [
+                      AppTheme.secondary,
+                      AppTheme.primary,
+                      AppTheme.accent,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
                 : null,
-            color: widget.isSelected ? null : _LuxuryColors.cardBackground,
+            color: widget.isSelected ? null : AppTheme.card,
             boxShadow: [
               BoxShadow(
                 color: widget.isSelected
-                    ? _LuxuryColors.goldMedium.withOpacity(0.4)
-                    : Colors.black.withOpacity(0.5),
+                    ? AppTheme.primary.withValues(alpha: 0.4)
+                    : Colors.black.withValues(alpha: 0.5),
                 blurRadius: widget.isSelected ? 28 : 20,
                 offset: Offset(0, widget.isSelected ? 12 : 8),
                 spreadRadius: widget.isSelected ? 0 : -4,
@@ -537,9 +529,11 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
             ],
           ),
           child: Container(
-            margin: widget.isSelected ? const EdgeInsets.all(2.5) : EdgeInsets.zero,
+            margin:
+                widget.isSelected ? const EdgeInsets.all(2.5) : EdgeInsets.zero,
             decoration: BoxDecoration(
-              color: widget.isSelected ? _LuxuryColors.backgroundDark : Colors.transparent,
+              color:
+                  widget.isSelected ? AppTheme.background : Colors.transparent,
               borderRadius: BorderRadius.circular(21.5),
             ),
             padding: const EdgeInsets.all(20),
@@ -560,7 +554,7 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
                           return Icon(
                             Icons.directions_car_rounded,
                             size: 80,
-                            color: _LuxuryColors.goldMedium.withOpacity(0.3),
+                            color: AppTheme.primary.withValues(alpha: 0.3),
                           );
                         },
                       ),
@@ -579,7 +573,7 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
                 Text(
                   widget.vehicle.type,
                   style: TextStyle(
-                    color: widget.isSelected ? _LuxuryColors.goldLight : Colors.white,
+                    color: widget.isSelected ? AppTheme.primary : Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.5,
@@ -594,8 +588,8 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
                   widget.vehicle.description,
                   style: TextStyle(
                     color: widget.isSelected
-                        ? Colors.white.withOpacity(0.8)
-                        : Colors.white.withOpacity(0.6),
+                        ? Colors.white.withValues(alpha: 0.8)
+                        : Colors.white.withValues(alpha: 0.6),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     height: 1.4,
@@ -627,29 +621,29 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              _LuxuryColors.goldLight.withOpacity(0.2),
-              _LuxuryColors.goldMedium.withOpacity(0.15),
+              AppTheme.primary.withValues(alpha: 0.2),
+              AppTheme.primary.withValues(alpha: 0.15),
             ],
           ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: _LuxuryColors.goldLight.withOpacity(0.4),
+            color: AppTheme.primary.withValues(alpha: 0.4),
             width: 1.5,
           ),
         ),
-        child: Row(
+        child: const Row(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             Icon(
               Icons.check_circle_rounded,
-              color: _LuxuryColors.goldLight,
+              color: AppTheme.primary,
               size: 16,
             ),
             SizedBox(width: 6),
             Text(
               'SÉLECTIONNÉ',
               style: TextStyle(
-                color: _LuxuryColors.goldLight,
+                color: AppTheme.primary,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
@@ -680,8 +674,8 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
               colors: [
                 Colors.transparent,
                 widget.isSelected
-                    ? _LuxuryColors.goldLight.withOpacity(0.3)
-                    : Colors.white.withOpacity(0.2),
+                    ? AppTheme.primary.withValues(alpha: 0.3)
+                    : Colors.white.withValues(alpha: 0.2),
                 Colors.transparent,
               ],
             ),
@@ -705,7 +699,7 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
       children: [
         Icon(
           icon,
-          color: widget.isSelected ? _LuxuryColors.goldLight : _LuxuryColors.goldMedium,
+          color: widget.isSelected ? AppTheme.primary : AppTheme.primary,
           size: 28,
         ),
         const SizedBox(height: 6),
@@ -713,8 +707,8 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
           label,
           style: TextStyle(
             color: widget.isSelected
-                ? Colors.white.withOpacity(0.8)
-                : Colors.white.withOpacity(0.6),
+                ? Colors.white.withValues(alpha: 0.8)
+                : Colors.white.withValues(alpha: 0.6),
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -723,7 +717,7 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
         Text(
           value,
           style: TextStyle(
-            color: widget.isSelected ? _LuxuryColors.goldLight : Colors.white,
+            color: widget.isSelected ? AppTheme.primary : Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -743,19 +737,19 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
         gradient: LinearGradient(
           colors: widget.isSelected
               ? [
-            _LuxuryColors.goldLight.withOpacity(0.15),
-            _LuxuryColors.goldMedium.withOpacity(0.1),
-          ]
+                  AppTheme.primary.withValues(alpha: 0.15),
+                  AppTheme.primary.withValues(alpha: 0.1),
+                ]
               : [
-            _LuxuryColors.goldMedium.withOpacity(0.1),
-            _LuxuryColors.goldDark.withOpacity(0.05),
-          ],
+                  AppTheme.primary.withValues(alpha: 0.1),
+                  AppTheme.secondary.withValues(alpha: 0.05),
+                ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: widget.isSelected
-              ? _LuxuryColors.goldLight.withOpacity(0.3)
-              : _LuxuryColors.goldMedium.withOpacity(0.2),
+              ? AppTheme.primary.withValues(alpha: 0.3)
+              : AppTheme.primary.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -768,8 +762,8 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
                 : strings.vehicleFixedPrice,
             style: TextStyle(
               color: widget.isSelected
-                  ? Colors.white.withOpacity(0.9)
-                  : Colors.white.withOpacity(0.7),
+                  ? Colors.white.withValues(alpha: 0.9)
+                  : Colors.white.withValues(alpha: 0.7),
               fontSize: 14,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
@@ -778,7 +772,7 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
           Text(
             priceText,
             style: TextStyle(
-              color: widget.isSelected ? _LuxuryColors.goldLight : _LuxuryColors.goldMedium,
+              color: widget.isSelected ? AppTheme.primary : AppTheme.primary,
               fontSize: 20,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
@@ -827,16 +821,17 @@ class _ContinueButtonState extends State<_ContinueButton> {
             onTapCancel: () => setState(() => _isPressed = false),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              transform: Matrix4.identity()..scale(_isPressed ? 0.97 : 1.0),
+              transform: Matrix4.diagonal3Values(
+                  _isPressed ? 0.97 : 1.0, _isPressed ? 0.97 : 1.0, 1.0),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      _LuxuryColors.goldDark,
-                      _LuxuryColors.goldLight,
-                      _LuxuryColors.goldAccent,
+                      AppTheme.secondary,
+                      AppTheme.primary,
+                      AppTheme.accent,
                     ],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
@@ -844,19 +839,19 @@ class _ContinueButtonState extends State<_ContinueButton> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: _isPressed
                       ? [
-                    BoxShadow(
-                      color: _LuxuryColors.goldMedium.withOpacity(0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 6),
-                    ),
-                  ]
+                          BoxShadow(
+                            color: AppTheme.primary.withValues(alpha: 0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 6),
+                          ),
+                        ]
                       : [
-                    BoxShadow(
-                      color: _LuxuryColors.goldMedium.withOpacity(0.5),
-                      blurRadius: 25,
-                      offset: const Offset(0, 12),
-                    ),
-                  ],
+                          BoxShadow(
+                            color: AppTheme.primary.withValues(alpha: 0.5),
+                            blurRadius: 25,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
                 ),
                 child: Center(
                   child: Row(

@@ -154,7 +154,7 @@ $message
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primaryGold.withOpacity(0.5),
+                color: AppTheme.primaryGold.withValues(alpha: 0.5),
                 blurRadius: 30,
                 spreadRadius: 5,
               ),
@@ -167,7 +167,7 @@ $message
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppTheme.richBlack.withOpacity(0.2),
+                  color: AppTheme.richBlack.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -294,9 +294,10 @@ $message
                               hint: Strings.of(context).fullNameHint,
                               icon: Icons.person_rounded,
                               delay: 0,
-                              validator: (value) => value == null || value.isEmpty
-                                  ? Strings.of(context).nameValidation
-                                  : null,
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                      ? Strings.of(context).nameValidation
+                                      : null,
                             ),
                             const SizedBox(height: 20),
                             _buildLuxuryField(
@@ -306,9 +307,10 @@ $message
                               icon: Icons.phone_rounded,
                               keyboardType: TextInputType.phone,
                               delay: 100,
-                              validator: (value) => value == null || value.isEmpty
-                                  ? Strings.of(context).phoneValidation
-                                  : null,
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                      ? Strings.of(context).phoneValidation
+                                      : null,
                             ),
                             const SizedBox(height: 20),
                             _buildLuxuryField(
@@ -322,9 +324,11 @@ $message
                                 if (value == null || value.isEmpty) {
                                   return Strings.of(context).emailValidation;
                                 }
-                                if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$")
+                                if (!RegExp(
+                                        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$")
                                     .hasMatch(value)) {
-                                  return Strings.of(context).emailFormatValidation;
+                                  return Strings.of(context)
+                                      .emailFormatValidation;
                                 }
                                 return null;
                               },
@@ -338,9 +342,10 @@ $message
                               keyboardType: TextInputType.multiline,
                               maxLines: 5,
                               delay: 300,
-                              validator: (value) => value == null || value.isEmpty
-                                  ? Strings.of(context).messageValidation
-                                  : null,
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                      ? Strings.of(context).messageValidation
+                                      : null,
                             ),
                             const SizedBox(height: 32),
                             _buildSubmitButton(),
@@ -374,7 +379,7 @@ $message
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryGold.withOpacity(0.4),
+                  color: AppTheme.primaryGold.withValues(alpha: 0.4),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -414,7 +419,7 @@ $message
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
-              color: AppTheme.offWhite.withOpacity(0.7),
+              color: AppTheme.offWhite.withValues(alpha: 0.7),
               height: 1.5,
             ),
           ),
@@ -451,17 +456,17 @@ $message
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
             colors: [
-              AppTheme.charcoal.withOpacity(0.6),
-              AppTheme.deepCharcoal.withOpacity(0.4),
+              AppTheme.charcoal.withValues(alpha: 0.6),
+              AppTheme.deepCharcoal.withValues(alpha: 0.4),
             ],
           ),
           border: Border.all(
-            color: AppTheme.primaryGold.withOpacity(0.3),
+            color: AppTheme.primaryGold.withValues(alpha: 0.3),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -480,7 +485,7 @@ $message
           decoration: InputDecoration(
             labelText: label,
             labelStyle: TextStyle(
-              color: AppTheme.offWhite.withOpacity(0.7),
+              color: AppTheme.offWhite.withValues(alpha: 0.7),
               fontSize: 14,
             ),
             floatingLabelStyle: const TextStyle(
@@ -489,7 +494,7 @@ $message
             ),
             hintText: hint,
             hintStyle: TextStyle(
-              color: AppTheme.offWhite.withOpacity(0.4),
+              color: AppTheme.offWhite.withValues(alpha: 0.4),
               fontSize: 15,
             ),
             prefixIcon: Container(
@@ -539,7 +544,7 @@ $message
           ),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryGold.withOpacity(0.5),
+              color: AppTheme.primaryGold.withValues(alpha: 0.5),
               blurRadius: 25,
               offset: const Offset(0, 12),
             ),
@@ -553,50 +558,50 @@ $message
             child: Center(
               child: _isSending
                   ? const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppTheme.richBlack,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Text(
-                    'SENDING...',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.richBlack,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                ],
-              )
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              AppTheme.richBlack,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Text(
+                          'SENDING...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.richBlack,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ],
+                    )
                   : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.send_rounded,
-                    color: AppTheme.richBlack,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    Strings.of(context).submitButton.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.richBlack,
-                      letterSpacing: 1.5,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.send_rounded,
+                          color: AppTheme.richBlack,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          Strings.of(context).submitButton.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.richBlack,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
             ),
           ),
         ),

@@ -12,10 +12,11 @@ import 'package:cabsudapp/reuse/theme.dart';
 import '../custom_page_route.dart';
 import 'car_type.dart';
 import '../localization/string.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:cabsudapp/reuse/map_style.dart';
+import 'package:geocoding/geocoding.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-const String _kGoogleApiKey = ''; // Deprecated: Use dotenv.env['GOOGLE_MAPS_API_KEY']
 
 /// Ultra-luxury distance calculator with premium animations and micro-interactions
 class DistanceCalculator extends StatefulWidget {
@@ -34,8 +35,10 @@ class DistanceCalculatorState extends State<DistanceCalculator>
   final _polylinePoints = PolylinePoints();
 
   // State
-  final ValueNotifier<List<String>> _pickupSuggestionsNotifier = ValueNotifier([]);
-  final ValueNotifier<List<String>> _destinationSuggestionsNotifier = ValueNotifier([]);
+  final ValueNotifier<List<String>> _pickupSuggestionsNotifier =
+      ValueNotifier([]);
+  final ValueNotifier<List<String>> _destinationSuggestionsNotifier =
+      ValueNotifier([]);
   final ValueNotifier<DateTime?> _dateTimeNotifier = ValueNotifier(null);
   final ValueNotifier<String> _distanceNotifier = ValueNotifier('');
   final ValueNotifier<String> _durationNotifier = ValueNotifier('');
@@ -74,6 +77,7 @@ class DistanceCalculatorState extends State<DistanceCalculator>
     );
 
     _initializeLanguage();
+    _getCurrentLocation();
   }
 
   @override
@@ -110,6 +114,52 @@ class DistanceCalculatorState extends State<DistanceCalculator>
     }
   }
 
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    try {
+      final position = await Geolocator.getCurrentPosition();
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final address = '${place.street}, ${place.locality}, ${place.country}';
+        if (mounted) {
+          setState(() {
+            _pickupController.text = address;
+            // Trigger any necessary UI updates or route drawing if destination is already set
+            if (_destinationController.text.isNotEmpty) {
+              _drawRoute();
+            }
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error getting location: $e');
+    }
+  }
+
   void _onAddressChanged(String query, bool isPickup) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 400), () {
@@ -130,10 +180,10 @@ class DistanceCalculatorState extends State<DistanceCalculator>
     try {
       final url = Uri.parse(
         'https://maps.googleapis.com/maps/api/place/autocomplete/json'
-            '?input=${Uri.encodeComponent(query)}'
-            '&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}'
-            '&components=country:fr'
-            '&language=fr',
+        '?input=${Uri.encodeComponent(query)}'
+        '&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}'
+        '&components=country:fr'
+        '&language=fr',
       );
 
       final response = await http.get(url);
@@ -178,7 +228,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
       }
 
       final response = await http.post(
-        Uri.parse('${dotenv.env['SUPABASE_URL']}/functions/v1/calculate_fare_from_address'),
+        Uri.parse(
+            '${dotenv.env['SUPABASE_URL']}/functions/v1/calculate_fare_from_address'),
         headers: {
           'Content-Type': 'application/json',
           'apikey': dotenv.env['SUPABASE_ANON_KEY']!,
@@ -208,7 +259,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
               CustomPageRoute(
                 child: VehicleSelectionPage(
                   origin: 'distance',
-                  totalFares: List<Map<String, dynamic>>.from(data['totalFares']),
+                  totalFares:
+                      List<Map<String, dynamic>>.from(data['totalFares']),
                 ),
               ),
             );
@@ -234,21 +286,24 @@ class DistanceCalculatorState extends State<DistanceCalculator>
         _getCoordinatesForAddress(_destinationController.text),
       ]);
 
-      final pickupLatLng = LatLng(coordinates[0]['lat']!, coordinates[0]['lon']!);
-      final destinationLatLng = LatLng(coordinates[1]['lat']!, coordinates[1]['lon']!);
+      final pickupLatLng =
+          LatLng(coordinates[0]['lat']!, coordinates[0]['lon']!);
+      final destinationLatLng =
+          LatLng(coordinates[1]['lat']!, coordinates[1]['lon']!);
 
       final directionsUrl = Uri.parse(
         'https://maps.googleapis.com/maps/api/directions/json'
-            '?origin=${coordinates[0]['lat']},${coordinates[0]['lon']}'
-            '&destination=${coordinates[1]['lat']},${coordinates[1]['lon']}'
-            '&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}',
+        '?origin=${coordinates[0]['lat']},${coordinates[0]['lon']}'
+        '&destination=${coordinates[1]['lat']},${coordinates[1]['lon']}'
+        '&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}',
       );
 
       final response = await http.get(directionsUrl);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == 'OK') {
-          final polylineEncoded = data['routes'][0]['overview_polyline']['points'];
+          final polylineEncoded =
+              data['routes'][0]['overview_polyline']['points'];
           final decodedPoints = _polylinePoints.decodePolyline(polylineEncoded);
           final routeCoordinates = decodedPoints
               .map((point) => LatLng(point.latitude, point.longitude))
@@ -262,7 +317,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
     }
   }
 
-  void _animateRoute(List<LatLng> fullRoute, LatLng pickup, LatLng destination) {
+  void _animateRoute(
+      List<LatLng> fullRoute, LatLng pickup, LatLng destination) {
     final animated = <LatLng>[];
     int index = 0;
 
@@ -323,12 +379,20 @@ class DistanceCalculatorState extends State<DistanceCalculator>
         CameraUpdate.newLatLngBounds(
           LatLngBounds(
             southwest: LatLng(
-              pickup.latitude < destination.latitude ? pickup.latitude : destination.latitude,
-              pickup.longitude < destination.longitude ? pickup.longitude : destination.longitude,
+              pickup.latitude < destination.latitude
+                  ? pickup.latitude
+                  : destination.latitude,
+              pickup.longitude < destination.longitude
+                  ? pickup.longitude
+                  : destination.longitude,
             ),
             northeast: LatLng(
-              pickup.latitude > destination.latitude ? pickup.latitude : destination.latitude,
-              pickup.longitude > destination.longitude ? pickup.longitude : destination.longitude,
+              pickup.latitude > destination.latitude
+                  ? pickup.latitude
+                  : destination.latitude,
+              pickup.longitude > destination.longitude
+                  ? pickup.longitude
+                  : destination.longitude,
             ),
           ),
           100,
@@ -340,8 +404,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
   Future<Map<String, double>> _getCoordinatesForAddress(String address) async {
     final url = Uri.parse(
       'https://maps.googleapis.com/maps/api/geocode/json'
-          '?address=${Uri.encodeComponent(address)}'
-          '&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}',
+      '?address=${Uri.encodeComponent(address)}'
+      '&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}',
     );
 
     final response = await http.get(url);
@@ -360,7 +424,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
     await prefs.setString('pickup_address', _pickupController.text);
     await prefs.setString('destination_address', _destinationController.text);
     if (_dateTimeNotifier.value != null) {
-      await prefs.setString('trip_datetime', _dateTimeNotifier.value!.toIso8601String());
+      await prefs.setString(
+          'trip_datetime', _dateTimeNotifier.value!.toIso8601String());
     }
   }
 
@@ -374,7 +439,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
     }
 
     try {
-      final response = await Supabase.instance.client.auth.refreshSession(refreshToken);
+      final response =
+          await Supabase.instance.client.auth.refreshSession(refreshToken);
       final jwt = response.session?.accessToken;
 
       if (jwt != null) {
@@ -440,8 +506,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
                             colors: [
-                              AppTheme.primaryGold.withOpacity(0.2),
-                              AppTheme.primaryGold.withOpacity(0.1),
+                              AppTheme.primaryGold.withValues(alpha: 0.2),
+                              AppTheme.primaryGold.withValues(alpha: 0.1),
                             ],
                           ),
                         ),
@@ -457,7 +523,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                         height: 40,
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
-                          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGold),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              AppTheme.primaryGold),
                         ),
                       ),
                     ],
@@ -493,64 +560,7 @@ class DistanceCalculatorState extends State<DistanceCalculator>
   }
 
   Widget _buildLuxuryAppBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.richBlack.withOpacity(0.3),
-            Colors.transparent,
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGold.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios_new,
-                color: AppTheme.primaryGold,
-                size: 20,
-              ),
-            ),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop();
-            },
-          ),
-          Expanded(
-            child: Center(
-              child: ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [
-                    AppTheme.lightGold,
-                    AppTheme.primaryGold,
-                    AppTheme.accentGold,
-                  ],
-                ).createShader(bounds),
-                child: Text(
-                  Strings.of(context).saisissezVotreAdresse,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 48),
-        ],
-      ),
-    );
+    return const _LuxuryAppBar();
   }
 
   Widget _buildProgressIndicator() {
@@ -578,8 +588,9 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                     return LinearProgressIndicator(
                       value: value,
                       minHeight: 6,
-                      backgroundColor: AppTheme.slate.withOpacity(0.3),
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryGold),
+                      backgroundColor: AppTheme.slate.withValues(alpha: 0.3),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppTheme.primaryGold),
                     );
                   },
                 ),
@@ -601,15 +612,14 @@ class DistanceCalculatorState extends State<DistanceCalculator>
   }
 
   Widget _buildStepLabel(String label, bool isComplete) {
-    return Opacity(
-      opacity: isComplete ? 1.0 : 0.4,
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isComplete ? AppTheme.primaryGold : AppTheme.offWhite,
-          fontSize: 12,
-          fontWeight: isComplete ? FontWeight.w600 : FontWeight.w400,
-        ),
+    return Text(
+      label,
+      style: TextStyle(
+        color: isComplete
+            ? AppTheme.primaryGold
+            : AppTheme.offWhite.withValues(alpha: 0.4),
+        fontSize: 12,
+        fontWeight: isComplete ? FontWeight.w600 : FontWeight.w400,
       ),
     );
   }
@@ -666,13 +676,13 @@ class DistanceCalculatorState extends State<DistanceCalculator>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppTheme.charcoal.withOpacity(0.6),
-                AppTheme.deepCharcoal.withOpacity(0.4),
+                AppTheme.charcoal.withValues(alpha: 0.6),
+                AppTheme.deepCharcoal.withValues(alpha: 0.4),
               ],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: AppTheme.primaryGold.withOpacity(0.3),
+              color: AppTheme.primaryGold.withValues(alpha: 0.3),
               width: 1.5,
             ),
           ),
@@ -687,7 +697,7 @@ class DistanceCalculatorState extends State<DistanceCalculator>
             decoration: InputDecoration(
               labelText: label,
               labelStyle: TextStyle(
-                color: AppTheme.offWhite.withOpacity(0.7),
+                color: AppTheme.offWhite.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
               floatingLabelStyle: const TextStyle(
@@ -716,7 +726,7 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                 color: AppTheme.deepCharcoal,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppTheme.primaryGold.withOpacity(0.2),
+                  color: AppTheme.primaryGold.withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -726,7 +736,7 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                 physics: const BouncingScrollPhysics(),
                 itemCount: suggestions.length,
                 separatorBuilder: (context, index) => Divider(
-                  color: AppTheme.primaryGold.withOpacity(0.1),
+                  color: AppTheme.primaryGold.withValues(alpha: 0.1),
                   height: 1,
                 ),
                 itemBuilder: (context, index) {
@@ -757,7 +767,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryGold.withOpacity(0.15),
+                                color: AppTheme.primaryGold
+                                    .withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Icon(
@@ -814,41 +825,45 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                     surface: AppTheme.charcoal,
                     onSurface: AppTheme.softWhite,
                   ),
-                  dialogBackgroundColor: AppTheme.charcoal,
+                  dialogTheme:
+                      const DialogThemeData(backgroundColor: AppTheme.charcoal),
                 ),
                 child: child!,
               ),
             );
 
-            if (pickedDate != null && mounted) {
-              final pickedTime = await showTimePicker(
-                context: context,
-                initialTime: TimeOfDay.fromDateTime(selectedDateTime ?? now),
-                builder: (context, child) => Theme(
-                  data: ThemeData.dark().copyWith(
-                    colorScheme: const ColorScheme.dark(
-                      primary: AppTheme.primaryGold,
-                      onPrimary: AppTheme.richBlack,
-                      surface: AppTheme.charcoal,
-                      onSurface: AppTheme.softWhite,
-                    ),
-                    dialogBackgroundColor: AppTheme.charcoal,
-                  ),
-                  child: child!,
-                ),
-              );
+            if (pickedDate == null) return;
+            if (!mounted) return;
 
-              if (pickedTime != null && mounted) {
-                _dateTimeNotifier.value = DateTime(
-                  pickedDate.year,
-                  pickedDate.month,
-                  pickedDate.day,
-                  pickedTime.hour,
-                  pickedTime.minute,
-                );
-                _currentStepNotifier.value = 3;
-                HapticFeedback.mediumImpact();
-              }
+            final pickedTime = await showTimePicker(
+              // ignore: use_build_context_synchronously
+              context: context,
+              initialTime: TimeOfDay.fromDateTime(selectedDateTime ?? now),
+              builder: (context, child) => Theme(
+                data: ThemeData.dark().copyWith(
+                  colorScheme: const ColorScheme.dark(
+                    primary: AppTheme.primaryGold,
+                    onPrimary: AppTheme.richBlack,
+                    surface: AppTheme.charcoal,
+                    onSurface: AppTheme.softWhite,
+                  ),
+                  dialogTheme:
+                      const DialogThemeData(backgroundColor: AppTheme.charcoal),
+                ),
+                child: child!,
+              ),
+            );
+
+            if (pickedTime != null && mounted) {
+              _dateTimeNotifier.value = DateTime(
+                pickedDate.year,
+                pickedDate.month,
+                pickedDate.day,
+                pickedTime.hour,
+                pickedTime.minute,
+              );
+              _currentStepNotifier.value = 3;
+              HapticFeedback.mediumImpact();
             }
           },
           borderRadius: BorderRadius.circular(20),
@@ -857,15 +872,15 @@ class DistanceCalculatorState extends State<DistanceCalculator>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.charcoal.withOpacity(0.6),
-                  AppTheme.deepCharcoal.withOpacity(0.4),
+                  AppTheme.charcoal.withValues(alpha: 0.6),
+                  AppTheme.deepCharcoal.withValues(alpha: 0.4),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: selectedDateTime != null
                     ? AppTheme.primaryGold
-                    : AppTheme.primaryGold.withOpacity(0.3),
+                    : AppTheme.primaryGold.withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -876,8 +891,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        AppTheme.primaryGold.withOpacity(0.3),
-                        AppTheme.primaryGold.withOpacity(0.2),
+                        AppTheme.primaryGold.withValues(alpha: 0.3),
+                        AppTheme.primaryGold.withValues(alpha: 0.2),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
@@ -898,7 +913,7 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                             ? 'Select date & time'
                             : 'Scheduled',
                         style: TextStyle(
-                          color: AppTheme.offWhite.withOpacity(0.7),
+                          color: AppTheme.offWhite.withValues(alpha: 0.7),
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -907,7 +922,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                       Text(
                         selectedDateTime == null
                             ? 'Tap to choose'
-                            : DateFormat('dd/MM/yyyy HH:mm').format(selectedDateTime),
+                            : DateFormat('dd/MM/yyyy HH:mm')
+                                .format(selectedDateTime),
                         style: const TextStyle(
                           color: AppTheme.softWhite,
                           fontSize: 16,
@@ -923,7 +939,7 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                       : Icons.arrow_forward_ios_rounded,
                   color: selectedDateTime != null
                       ? AppTheme.primaryGold
-                      : AppTheme.offWhite.withOpacity(0.5),
+                      : AppTheme.offWhite.withValues(alpha: 0.5),
                   size: 22,
                 ),
               ],
@@ -940,12 +956,12 @@ class DistanceCalculatorState extends State<DistanceCalculator>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: AppTheme.primaryGold.withOpacity(0.4),
+          color: AppTheme.primaryGold.withValues(alpha: 0.4),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryGold.withOpacity(0.2),
+            color: AppTheme.primaryGold.withValues(alpha: 0.2),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -964,7 +980,10 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                     target: LatLng(48.8566, 2.3522),
                     zoom: 12,
                   ),
-                  onMapCreated: (controller) => _mapController = controller,
+                  onMapCreated: (controller) {
+                    _mapController = controller;
+                  },
+                  style: luxuryMapStyle,
                   polylines: polylines,
                   markers: markers,
                   myLocationEnabled: true,
@@ -994,13 +1013,13 @@ class DistanceCalculatorState extends State<DistanceCalculator>
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: hasInfo
-                    ? AppTheme.primaryGold.withOpacity(0.15)
-                    : AppTheme.charcoal.withOpacity(0.4),
+                    ? AppTheme.primaryGold.withValues(alpha: 0.15)
+                    : AppTheme.charcoal.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: hasInfo
-                      ? AppTheme.primaryGold.withOpacity(0.5)
-                      : AppTheme.primaryGold.withOpacity(0.2),
+                      ? AppTheme.primaryGold.withValues(alpha: 0.5)
+                      : AppTheme.primaryGold.withValues(alpha: 0.2),
                   width: 1.5,
                 ),
               ),
@@ -1009,11 +1028,13 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGold.withOpacity(0.2),
+                      color: AppTheme.primaryGold.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      hasInfo ? Icons.check_circle_rounded : Icons.route_rounded,
+                      hasInfo
+                          ? Icons.check_circle_rounded
+                          : Icons.route_rounded,
                       color: AppTheme.primaryGold,
                       size: 24,
                     ),
@@ -1025,7 +1046,9 @@ class DistanceCalculatorState extends State<DistanceCalculator>
                           ? '$distance • $duration'
                           : 'Route info will appear here',
                       style: TextStyle(
-                        color: hasInfo ? AppTheme.softWhite : AppTheme.offWhite.withOpacity(0.6),
+                        color: hasInfo
+                            ? AppTheme.softWhite
+                            : AppTheme.offWhite.withValues(alpha: 0.6),
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1047,7 +1070,7 @@ class DistanceCalculatorState extends State<DistanceCalculator>
         gradient: LinearGradient(
           colors: [
             Colors.transparent,
-            AppTheme.richBlack.withOpacity(0.5),
+            AppTheme.richBlack.withValues(alpha: 0.5),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -1065,87 +1088,157 @@ class DistanceCalculatorState extends State<DistanceCalculator>
               borderRadius: BorderRadius.circular(20),
               gradient: canProceed && !isCalculating
                   ? const LinearGradient(
-                colors: [AppTheme.primaryGold, AppTheme.accentGold],
-              )
+                      colors: [AppTheme.primaryGold, AppTheme.accentGold],
+                    )
                   : LinearGradient(
-                colors: [
-                  AppTheme.slate.withOpacity(0.3),
-                  AppTheme.slate.withOpacity(0.2),
-                ],
-              ),
+                      colors: [
+                        AppTheme.slate.withValues(alpha: 0.3),
+                        AppTheme.slate.withValues(alpha: 0.2),
+                      ],
+                    ),
               boxShadow: canProceed && !isCalculating
                   ? [
-                BoxShadow(
-                  color: AppTheme.primaryGold.withOpacity(0.5),
-                  blurRadius: 28,
-                  offset: const Offset(0, 14),
-                ),
-              ]
+                      BoxShadow(
+                        color: AppTheme.primaryGold.withValues(alpha: 0.5),
+                        blurRadius: 28,
+                        offset: const Offset(0, 14),
+                      ),
+                    ]
                   : null,
             ),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: canProceed && !isCalculating ? _calculateAndNavigate : null,
+                onTap:
+                    canProceed && !isCalculating ? _calculateAndNavigate : null,
                 borderRadius: BorderRadius.circular(20),
                 child: Center(
                   child: isCalculating
                       ? const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.richBlack),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'CALCULATING...',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.richBlack,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ],
-                  )
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppTheme.richBlack),
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              'CALCULATING...',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.richBlack,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ],
+                        )
                       : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        canProceed
-                            ? Icons.calculate_rounded
-                            : Icons.lock_outline_rounded,
-                        color: canProceed
-                            ? AppTheme.richBlack
-                            : AppTheme.offWhite.withOpacity(0.3),
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        canProceed
-                            ? Strings.of(context).calculerLaDistance.toUpperCase()
-                            : 'COMPLETE ALL STEPS',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: canProceed
-                              ? AppTheme.richBlack
-                              : AppTheme.offWhite.withOpacity(0.3),
-                          letterSpacing: 1.2,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              canProceed
+                                  ? Icons.calculate_rounded
+                                  : Icons.lock_outline_rounded,
+                              color: canProceed
+                                  ? AppTheme.richBlack
+                                  : AppTheme.offWhite.withValues(alpha: 0.3),
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              canProceed
+                                  ? Strings.of(context)
+                                      .calculerLaDistance
+                                      .toUpperCase()
+                                  : 'COMPLETE ALL STEPS',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: canProceed
+                                    ? AppTheme.richBlack
+                                    : AppTheme.offWhite.withValues(alpha: 0.3),
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _LuxuryAppBar extends StatelessWidget {
+  const _LuxuryAppBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.richBlack.withValues(alpha: 0.3),
+            Colors.transparent,
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGold.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios_new,
+                color: AppTheme.primaryGold,
+                size: 20,
+              ),
+            ),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              Navigator.of(context).pop();
+            },
+          ),
+          Expanded(
+            child: Center(
+              child: ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [
+                    AppTheme.lightGold,
+                    AppTheme.primaryGold,
+                    AppTheme.accentGold,
+                  ],
+                ).createShader(bounds),
+                child: Text(
+                  Strings.of(context).saisissezVotreAdresse,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 48),
+        ],
       ),
     );
   }

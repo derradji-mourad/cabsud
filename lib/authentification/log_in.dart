@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cabsudapp/reuse/theme.dart';
 import '../localization/string.dart';
 
 /// Premium login screen with Material 3 design and luxury aesthetics
@@ -25,13 +26,6 @@ class _LoginScreenState extends State<LoginScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-
-  // Premium color palette
-  static const _kGoldPrimary = Color(0xFFD4AF37);
-  static const _kGoldLight = Color(0xFFF7EF8A);
-  static const _kGoldDark = Color(0xFFAE8625);
-  static const _kBackgroundDark = Color(0xFF0A0A0A);
-  static const _kSurfaceDark = Color(0xFF1A1A1A);
 
   @override
   void initState() {
@@ -124,7 +118,9 @@ class _LoginScreenState extends State<LoginScreen>
       if (!mounted) return;
       _showErrorSnackBar(Strings.of(context).loginFailed);
     } finally {
-      _loadingNotifier.value = false;
+      if (mounted) {
+        _loadingNotifier.value = false;
+      }
     }
   }
 
@@ -143,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _kBackgroundDark,
+      backgroundColor: AppTheme.background,
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
         child: SafeArea(
@@ -208,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen>
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: _kGoldPrimary.withOpacity(0.3),
+              color: AppTheme.primary.withValues(alpha: 0.3),
               blurRadius: 40,
               spreadRadius: 10,
             ),
@@ -223,7 +219,7 @@ class _LoginScreenState extends State<LoginScreen>
             return const Icon(
               Icons.business,
               size: 160, // INCREASED proportionally
-              color: _kGoldPrimary,
+              color: AppTheme.primary,
             );
           },
         ),
@@ -237,18 +233,18 @@ class _LoginScreenState extends State<LoginScreen>
         Text(
           'Welcome Back',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.5,
-          ),
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+              ),
         ),
         const SizedBox(height: 8),
         Text(
           'Sign in to continue',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.white.withOpacity(0.6),
-            letterSpacing: 0.2,
-          ),
+                color: Colors.white.withValues(alpha: 0.6),
+                letterSpacing: 0.2,
+              ),
         ),
       ],
     );
@@ -303,7 +299,7 @@ class _LoginScreenState extends State<LoginScreen>
           child: Text(
             strings.loginButton,
             style: const TextStyle(
-              color: _kBackgroundDark,
+              color: AppTheme.background,
               fontWeight: FontWeight.w700,
               fontSize: 16,
               letterSpacing: 0.5,
@@ -321,14 +317,14 @@ class _LoginScreenState extends State<LoginScreen>
         Text(
           strings.signUpText,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontSize: 14,
           ),
         ),
         TextButton(
           onPressed: () => Navigator.pushNamed(context, '/signin'),
           style: TextButton.styleFrom(
-            foregroundColor: _kGoldPrimary,
+            foregroundColor: AppTheme.primary,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
@@ -408,29 +404,29 @@ class _PremiumTextFieldState extends State<_PremiumTextField> {
             gradient: LinearGradient(
               colors: isFocused
                   ? [
-                const Color(0xFFD4AF37),
-                const Color(0xFFF7EF8A),
-                const Color(0xFFD4AF37),
-              ]
+                      AppTheme.primary,
+                      AppTheme.primary,
+                      AppTheme.primary,
+                    ]
                   : [
-                Colors.white.withOpacity(0.1),
-                Colors.white.withOpacity(0.05),
-              ],
+                      Colors.white.withValues(alpha: 0.1),
+                      Colors.white.withValues(alpha: 0.05),
+                    ],
             ),
             boxShadow: isFocused
                 ? [
-              BoxShadow(
-                color: const Color(0xFFD4AF37).withOpacity(0.3),
-                blurRadius: 20,
-                spreadRadius: 1,
-              ),
-            ]
+                    BoxShadow(
+                      color: AppTheme.primary.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      spreadRadius: 1,
+                    ),
+                  ]
                 : [],
           ),
           padding: const EdgeInsets.all(2),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
+              color: AppTheme.muted,
               borderRadius: BorderRadius.circular(14),
             ),
             child: TextFormField(
@@ -447,28 +443,28 @@ class _PremiumTextFieldState extends State<_PremiumTextField> {
               decoration: InputDecoration(
                 hintText: widget.hintText,
                 hintStyle: TextStyle(
-                  color: Colors.white.withOpacity(0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
                   fontWeight: FontWeight.w400,
                 ),
                 prefixIcon: widget.prefixIcon != null
                     ? Icon(
-                  widget.prefixIcon,
-                  color: isFocused
-                      ? const Color(0xFFD4AF37)
-                      : Colors.white.withOpacity(0.5),
-                )
+                        widget.prefixIcon,
+                        color: isFocused
+                            ? AppTheme.primary
+                            : Colors.white.withValues(alpha: 0.5),
+                      )
                     : null,
                 suffixIcon: widget.obscureText
                     ? IconButton(
-                  icon: Icon(
-                    _obscureText
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                    color: Colors.white.withOpacity(0.5),
-                  ),
-                  onPressed: () =>
-                      setState(() => _obscureText = !_obscureText),
-                )
+                        icon: Icon(
+                          _obscureText
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: Colors.white.withValues(alpha: 0.5),
+                        ),
+                        onPressed: () =>
+                            setState(() => _obscureText = !_obscureText),
+                      )
                     : null,
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
@@ -511,30 +507,30 @@ class _GlassmorphicButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         gradient: onPressed != null
             ? const LinearGradient(
-          colors: [
-            Color(0xFFAE8625),
-            Color(0xFFF7EF8A),
-            Color(0xFFD2AC47),
-            Color(0xFFEDC967),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        )
+                colors: [
+                  AppTheme.darkGold,
+                  AppTheme.primary,
+                  AppTheme.primary,
+                  AppTheme.accent,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
             : LinearGradient(
-          colors: [
-            Colors.grey.shade800,
-            Colors.grey.shade700,
-          ],
-        ),
+                colors: [
+                  Colors.grey.shade800,
+                  Colors.grey.shade700,
+                ],
+              ),
         boxShadow: onPressed != null
             ? [
-          BoxShadow(
-            color: const Color(0xFFD4AF37).withOpacity(0.4),
-            blurRadius: 24,
-            spreadRadius: 2,
-            offset: const Offset(0, 8),
-          ),
-        ]
+                BoxShadow(
+                  color: AppTheme.primary.withValues(alpha: 0.4),
+                  blurRadius: 24,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 8),
+                ),
+              ]
             : [],
       ),
       child: Material(
@@ -542,18 +538,18 @@ class _GlassmorphicButton extends StatelessWidget {
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(16),
-          splashColor: Colors.white.withOpacity(0.2),
-          highlightColor: Colors.white.withOpacity(0.1),
+          splashColor: Colors.white.withValues(alpha: 0.2),
+          highlightColor: Colors.white.withValues(alpha: 0.1),
           child: Center(
             child: isLoading
                 ? const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation(Color(0xFF0A0A0A)),
-              ),
-            )
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation(AppTheme.background),
+                    ),
+                  )
                 : child,
           ),
         ),

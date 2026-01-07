@@ -23,14 +23,14 @@ class LuxuryDropdown extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryGold.withOpacity(0.1),
+            color: AppTheme.primaryGold.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: const Icon(
@@ -38,7 +38,7 @@ class LuxuryDropdown extends StatelessWidget {
             color: AppTheme.primaryGold,
           ),
           labelStyle: TextStyle(
-            color: AppTheme.offWhite.withOpacity(0.8),
+            color: AppTheme.offWhite.withValues(alpha: 0.8),
             fontSize: 14,
           ),
           floatingLabelStyle: const TextStyle(
@@ -46,11 +46,11 @@ class LuxuryDropdown extends StatelessWidget {
             fontSize: 14,
           ),
         ),
-        dropdownColor: AppTheme.charcoal,  // Dark dropdown background
+        dropdownColor: AppTheme.charcoal, // Dark dropdown background
         iconEnabledColor: AppTheme.primaryGold,
         // FIXED: White text in dropdown
         style: const TextStyle(
-          color: AppTheme.softWhite,  // White text
+          color: AppTheme.softWhite, // White text
           fontSize: 16,
           fontWeight: FontWeight.w400,
         ),

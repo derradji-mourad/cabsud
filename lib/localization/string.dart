@@ -26,12 +26,17 @@ class Strings {
   String get descriptionText2 => _currentStrings['descriptionText'] ?? '';
 
   // Intro & Service Screens
-  String get airportTransferTitle => _currentStrings['airport_transfer_title'] ?? '';
-  String get airportTransferDescription => _currentStrings['airport_transfer_description'] ?? '';
-  String get cruiseTransferTitle => _currentStrings['cruiseTransferTitle'] ?? '';
-  String get cruiseTransferDescription => _currentStrings['cruiseTransferDescription'] ?? '';
+  String get airportTransferTitle =>
+      _currentStrings['airport_transfer_title'] ?? '';
+  String get airportTransferDescription =>
+      _currentStrings['airport_transfer_description'] ?? '';
+  String get cruiseTransferTitle =>
+      _currentStrings['cruiseTransferTitle'] ?? '';
+  String get cruiseTransferDescription =>
+      _currentStrings['cruiseTransferDescription'] ?? '';
   String get trainTransferTitle => _currentStrings['trainTransferTitle'] ?? '';
-  String get trainTransferDescription => _currentStrings['trainTransferDescription'] ?? '';
+  String get trainTransferDescription =>
+      _currentStrings['trainTransferDescription'] ?? '';
   String get introTitle5 => _currentStrings['introTitle5'] ?? '';
   String get introDescription5 => _currentStrings['introDescription5'] ?? '';
   String get introTitle6 => _currentStrings['introTitle6'] ?? '';
@@ -67,7 +72,8 @@ class Strings {
   String get passwordRequired => _currentStrings['passwordRequired'] ?? '';
   String get emailRequired2 => _currentStrings['emailRequired2'] ?? '';
   String get passwordRequired2 => _currentStrings['passwordRequired2'] ?? '';
-  String get confirmPasswordRequired => _currentStrings['confirmPasswordRequired'] ?? '';
+  String get confirmPasswordRequired =>
+      _currentStrings['confirmPasswordRequired'] ?? '';
   String get passwordMismatch => _currentStrings['passwordMismatch'] ?? '';
   String get passwordStrength => _currentStrings['passwordStrength'] ?? '';
   String get emailInvalid => _currentStrings['emailInvalid'] ?? '';
@@ -77,7 +83,8 @@ class Strings {
 
   // Legal
   String get termsOfService => _currentStrings['termsOfService'] ?? '';
-  String get termsOfServiceContent => _currentStrings['termsOfServiceContent'] ?? '';
+  String get termsOfServiceContent =>
+      _currentStrings['termsOfServiceContent'] ?? '';
 
   // === Services Screen ===
   String get servicesTitle => _currentStrings['servicesTitle']!;
@@ -110,9 +117,11 @@ class Strings {
   String get nameValidation => _currentStrings['nameValidation'] ?? '';
   String get phoneValidation => _currentStrings['phoneValidation'] ?? '';
   String get emailValidation => _currentStrings['emailValidation'] ?? '';
-  String get emailFormatValidation => _currentStrings['emailFormatValidation'] ?? '';
+  String get emailFormatValidation =>
+      _currentStrings['emailFormatValidation'] ?? '';
 
-  String get vehicleSelectionTitle => _currentStrings['vehicleSelectionTitle'] ?? '';
+  String get vehicleSelectionTitle =>
+      _currentStrings['vehicleSelectionTitle'] ?? '';
   String get vehicleTypeEco => _currentStrings['vehicleTypeEco'] ?? '';
   String get vehicleTypeBerline => _currentStrings['vehicleTypeBerline'] ?? '';
   String get vehicleTypeVan => _currentStrings['vehicleTypeVan'] ?? '';
@@ -126,7 +135,8 @@ class Strings {
   String get continueButton => _currentStrings['continueButton'] ?? '';
 
   String get appointmentTitle => _currentStrings['appointmentTitle'] ?? '';
-  String get appointmentSubtitle => _currentStrings['appointmentSubtitle'] ?? '';
+  String get appointmentSubtitle =>
+      _currentStrings['appointmentSubtitle'] ?? '';
   String get selectDate => _currentStrings['selectDate'] ?? '';
   String get selectTime => _currentStrings['selectTime'] ?? '';
   String get confirmAppointment => _currentStrings['confirmAppointment'] ?? '';
@@ -142,10 +152,12 @@ class Strings {
   String get contact => _currentStrings['contact'] ?? '';
   String get settings => _currentStrings['settings'] ?? '';
   String get adresseDePickup => _currentStrings['adresseDePickup'] ?? '';
-  String get adresseDeDestination => _currentStrings['adresseDeDestination'] ?? '';
+  String get adresseDeDestination =>
+      _currentStrings['adresseDeDestination'] ?? '';
   String get distance => _currentStrings['distance'] ?? '';
   String get duree => _currentStrings['duree'] ?? '';
-  String get saisissezVotreAdresse => _currentStrings['saisissezVotreAdresse'] ?? '';
+  String get saisissezVotreAdresse =>
+      _currentStrings['saisissezVotreAdresse'] ?? '';
   String get calculerLaDistance => _currentStrings['calculerLaDistance'] ?? '';
 
   String get accueil => _currentStrings['accueil'] ?? '';
@@ -159,7 +171,8 @@ class Strings {
   String get selectService => _currentStrings['selectService'] ?? '';
   String get airportTransport => _currentStrings['airportTransport'] ?? '';
   String get cruiseTransport => _currentStrings['cruiseTransport'] ?? '';
-  String get trainStationTransport => _currentStrings['trainStationTransport'] ?? '';
+  String get trainStationTransport =>
+      _currentStrings['trainStationTransport'] ?? '';
   String get carAtDisposal => _currentStrings['carAtDisposal'] ?? '';
   String get tourism => _currentStrings['tourism'] ?? '';
   String get selected => _currentStrings['selected'] ?? '';
@@ -175,15 +188,17 @@ class Strings {
   String get hours => _currentStrings['hours'] ?? '';
   String get continueButton2 => _currentStrings['continue'] ?? '';
 
-  String get commandSuccessMessage => _currentStrings['commandSuccessMessage'] ?? '';
+  String get commandSuccessMessage =>
+      _currentStrings['commandSuccessMessage'] ?? '';
   String get backToHome => _currentStrings['backToHome'] ?? '';
 
-  String get selectVehicleFirst => _currentStrings['selectVehicleFirst'] ?? 'Please select a vehicle first';
+  String get adresseInvalide =>
+      _currentStrings['adresseInvalide'] ?? 'Invalid address';
+  String get erreurCalcul =>
+      _currentStrings['erreurCalcul'] ?? 'Error calculating the distance';
 
-  String get adresseInvalide => _currentStrings['adresseInvalide'] ?? 'Invalid address';
-  String get erreurCalcul => _currentStrings['erreurCalcul'] ?? 'Error calculating the distance';
-
-  String get selectionnerDateHeure => _currentStrings['selectionnerDateHeure'] ?? '';
+  String get selectionnerDateHeure =>
+      _currentStrings['selectionnerDateHeure'] ?? '';
 
   String get fillAllFields => _currentStrings['fillAllFields'] ?? '';
 
@@ -194,22 +209,37 @@ class Strings {
 
   String get logoutButton => _currentStrings['logoutButton'] ?? '';
 
-
-
   String get messageLabel => _currentStrings['messageLabel'] ?? '';
   String get messageHint => _currentStrings['messageHint'] ?? '';
   String get messageValidation => _currentStrings['messageValidation'] ?? '';
 
-
   String get emailLaunchError => _currentStrings['emailLaunchError'] ?? '';
 
-  String get emailSentSuccess => _currentStrings['emailSentSuccess'] ?? 'Email sent successfully!';
-  String get emailSentError => _currentStrings['emailSentError'] ?? 'Failed to send email. Please try again later.';
+  String get emailSentSuccess =>
+      _currentStrings['emailSentSuccess'] ?? 'Email sent successfully!';
+  String get emailSentError =>
+      _currentStrings['emailSentError'] ??
+      'Failed to send email. Please try again later.';
 
+  // Quick Service
+  String get quickServiceTitle => _currentStrings['quickServiceTitle'] ?? '';
+  String get quickServiceSubtitle =>
+      _currentStrings['quickServiceSubtitle'] ?? '';
+  String get passengerName => _currentStrings['passengerName'] ?? '';
+  String get passengerNameHint => _currentStrings['passengerNameHint'] ?? '';
+  String get requestTrip => _currentStrings['requestTrip'] ?? '';
+  String get tripRequested => _currentStrings['tripRequested'] ?? '';
+  String get tripRequestError => _currentStrings['tripRequestError'] ?? '';
+  String get nameRequired => _currentStrings['nameRequired'] ?? '';
+  String get pickupRequired => _currentStrings['pickupRequired'] ?? '';
+  String get dropoffRequired => _currentStrings['dropoffRequired'] ?? '';
+  String get calculatingFares => _currentStrings['calculatingFares'] ?? '';
+  String get selectVehicle => _currentStrings['selectVehicle'] ?? '';
+  String get selectVehicleFirst => _currentStrings['selectVehicleFirst'] ?? '';
 
-
-
-
-
-
+  String get paymentMethod =>
+      _currentStrings['paymentMethod'] ?? 'Payment Method';
+  String get cash => _currentStrings['cash'] ?? 'Cash';
+  String get card => _currentStrings['card'] ?? 'Card';
+  String get payOnBoard => _currentStrings['payOnBoard'] ?? 'Pay on board';
 }

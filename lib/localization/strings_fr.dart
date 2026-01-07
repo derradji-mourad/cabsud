@@ -2,18 +2,24 @@ class StringsFr {
   Map<String, String> getStrings() {
     return {
       'appTitle': 'Bienvenue sur Cab-Sud',
-      'descriptionText': 'Cab-Sud, spécialiste du transport à Marseille, offre un service rapide et agréable.',
+      'descriptionText':
+          'Cab-Sud, spécialiste du transport à Marseille, offre un service rapide et agréable.',
 
       'airport_transfer_title': 'TRANSFERT AÉROPORT',
-      'airport_transfer_description': 'Cab-Sud, votre solution pour les transferts aéroport à Marseille, allie praticité et style.',
+      'airport_transfer_description':
+          'Cab-Sud, votre solution pour les transferts aéroport à Marseille, allie praticité et style.',
       'cruiseTransferTitle': 'TRANSFERT PORT DE CROISIÈRE',
-      'cruiseTransferDescription': 'Cab-Sud, pour des transferts sur mesure depuis le port de croisière, avec ponctualité et qualité.',
+      'cruiseTransferDescription':
+          'Cab-Sud, pour des transferts sur mesure depuis le port de croisière, avec ponctualité et qualité.',
       'trainTransferTitle': 'TRANSFERT GARE',
-      'trainTransferDescription': 'Cab-Sud, votre partenaire marseillais pour des trajets confortables et efficaces.',
+      'trainTransferDescription':
+          'Cab-Sud, votre partenaire marseillais pour des trajets confortables et efficaces.',
       'introTitle5': 'BIENVENUE SUR CAB-SUD',
-      'introDescription5': 'Cab-Sud, transport premium à Marseille, pour explorer la région en toute sérénité.',
+      'introDescription5':
+          'Cab-Sud, transport premium à Marseille, pour explorer la région en toute sérénité.',
       'introTitle6': 'MISE À DISPOSITION',
-      'introDescription6': 'Pour vos événements, nos véhicules offrent sécurité et distinction.',
+      'introDescription6':
+          'Pour vos événements, nos véhicules offrent sécurité et distinction.',
 
       'skipButton': 'PASSER',
       'nextButton': 'SUIvanT',
@@ -41,7 +47,8 @@ class StringsFr {
       'emailRequired2': 'L\'email est requis',
       'confirmPasswordRequired': 'La confirmation du mot de passe est requise',
       'passwordMismatch': 'Les mots de passe ne correspondent pas',
-      'passwordStrength': 'Doit contenir 1 majuscule, 1 chiffre, 1 caractère spécial',
+      'passwordStrength':
+          'Doit contenir 1 majuscule, 1 chiffre, 1 caractère spécial',
       'termsOfService': 'Conditions d\'utilisation',
       'agree': 'J\'accepte',
       'cancel': 'Annuler',
@@ -49,7 +56,7 @@ class StringsFr {
       'signUpFailed': 'Échec de l\'inscription : ',
       'googleSignInFailed': 'Échec de la connexion Google',
       'emailInvalid': 'Entrez un email valide',
-      'termsOfServicecontent': '''
+      'termsOfServiceContent': '''
 Bienvenue dans notre service CAB-SUD. En vous inscrivant et en utilisant nos services, vous acceptez les conditions suivantes :
 
 1. Vous acceptez d’utiliser l’application à des fins de covoiturage légales uniquement.
@@ -81,7 +88,8 @@ Pour toute assistance, contactez-nous à khaleddarradji@gmail.com.
       'gotoHomeBtn': 'Aller à la page d\'accueil',
 
       'contactTitle': 'Contactez-nous',
-      'contactSubtitle': 'Nous serions ravis de vous entendre! Veuillez remplir le formulaire ci-dessous.',
+      'contactSubtitle':
+          'Nous serions ravis de vous entendre! Veuillez remplir le formulaire ci-dessous.',
       'fullNameLabel': 'Nom complet',
       'fullNameHint': 'Entrez votre nom complet',
       'phoneLabel': 'Numéro de téléphone',
@@ -97,7 +105,7 @@ Pour toute assistance, contactez-nous à khaleddarradji@gmail.com.
 
       'vehicleSelectionTitle': 'Choisis ta gamme idéale',
       'vehicleTypeEco': 'eco',
-      'vehicleTypeBerline': 'berline',
+      'vehicleTypeBerline': 'premuim',
       'vehicleTypeVan': 'van',
       'vehicleDescEco': 'Économique et confortable',
       'vehicleDescBerline': 'Confort haut de gamme',
@@ -108,15 +116,17 @@ Pour toute assistance, contactez-nous à khaleddarradji@gmail.com.
       'vehicleFixedPrice': 'Prix fixe',
       'continueButton': 'CONTINUER',
 
-      'appointmentTitle' : "Prendre un rendez-vous",
-      'appointmentSubtitle' : "Choisissez une date et une heure qui vous conviennent",
-      'selectDate' : "Sélectionner une date",
+      'appointmentTitle': "Prendre un rendez-vous",
+      'appointmentSubtitle':
+          "Choisissez une date et une heure qui vous conviennent",
+      'selectDate': "Sélectionner une date",
       'selectTime': "Sélectionner une heure",
-      'confirmAppointment' : "Confirmer le rendez-vous",
-      'appointmentSuccess' : "Votre rendez-vous a été réservé !",
-      'appointmentError' : "Échec de la réservation du rendez-vous. Veuillez réessayer.",
-      'dateRequired' : "Veuillez sélectionner une date",
-      'timeRequired' : "Veuillez sélectionner une heure",
+      'confirmAppointment': "Confirmer le rendez-vous",
+      'appointmentSuccess': "Votre rendez-vous a été réservé !",
+      'appointmentError':
+          "Échec de la réservation du rendez-vous. Veuillez réessayer.",
+      'dateRequired': "Veuillez sélectionner une date",
+      'timeRequired': "Veuillez sélectionner une heure",
 
       'faireUnecommande': 'Faire une commande',
       'miseADisposition': 'Service de disponibilité',
@@ -149,7 +159,8 @@ Pour toute assistance, contactez-nous à khaleddarradji@gmail.com.
       'continueButton1': 'CONTINUER',
 
       'infoTitle': 'Information Importante',
-      'infoDescription': 'Le service de mise à disposition nécessite un paiement effectué exclusivement à bord du véhicule.',
+      'infoDescription':
+          'Le service de mise à disposition nécessite un paiement effectué exclusivement à bord du véhicule.',
       'understood': 'J\'AI COMPRIS',
       'planJourney': 'Plan Your Journey',
       'departureAddress': 'Departure Address',
@@ -158,10 +169,9 @@ Pour toute assistance, contactez-nous à khaleddarradji@gmail.com.
       'hours': 'Hours',
       'continue': 'CONTINUE',
 
-      'commandSuccessMessage': 'Commande effectuée avec succès !\nVous serez contacté bientôt.',
+      'commandSuccessMessage':
+          'Commande effectuée avec succès !\nVous serez contacté bientôt.',
       'backToHome': 'Retourner à la page d’accueil',
-
-      'selectVehicleFirst': 'Veuillez sélectionner un véhicule', // FR
 
       'adresseInvalide': 'Adresse invalide',
       'erreurCalcul': 'Erreur lors du calcul de la distance',
@@ -183,9 +193,29 @@ Pour toute assistance, contactez-nous à khaleddarradji@gmail.com.
       'emailLaunchError': 'Impossible d’ouvrir le client email.',
 
       'emailSentSuccess': 'Email envoyé avec succès!',
-      'emailSentError': 'Échec de l’envoi de l’email. Veuillez réessayer plus tard.',
+      'emailSentError':
+          'Échec de l\'envoi de l\'email. Veuillez réessayer plus tard.',
 
+      // Quick Service
+      'quickServiceTitle': 'Trajet Rapide',
+      'quickServiceSubtitle': 'Réservez rapidement',
+      'passengerName': 'Nom du passager',
+      'passengerNameHint': 'Entrez votre nom',
+      'requestTrip': 'DEMANDER LE TRAJET',
+      'tripRequested': 'Trajet demandé avec succès!',
+      'tripRequestError': 'Erreur lors de la demande. Réessayez.',
+      'nameRequired': 'Le nom est requis',
+      'pickupRequired': 'L\'adresse de départ est requise',
+      'dropoffRequired': 'L\'adresse d\'arrivée est requise',
+      'calculatingFares': 'Estimation des prix...',
+      'selectVehicle': 'Sélectionner un véhicule',
+      'selectVehicleFirst': 'Veuillez sélectionner un véhicule d\'abord',
 
+      // Payment
+      'paymentMethod': 'Moyen de paiement',
+      'cash': 'Espèces',
+      'card': 'Carte Bancaire',
+      'payOnBoard': 'Payer à bord',
     };
   }
 }

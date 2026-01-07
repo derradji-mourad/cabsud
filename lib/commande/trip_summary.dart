@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -19,7 +18,8 @@ class TripSummaryPage extends StatefulWidget {
   State<TripSummaryPage> createState() => _TripSummaryPageState();
 }
 
-class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderStateMixin {
+class _TripSummaryPageState extends State<TripSummaryPage>
+    with TickerProviderStateMixin {
   String? type, description, imagePath, fixedPrice, origin;
   int? passengers, bags;
   double? price, distanceKm, durationMin;
@@ -90,12 +90,14 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
     if (!mounted) return; // Safety check
 
     setState(() {
-      type = widget.tripData['vehicleType'] ?? prefs.getString('selectedVehicleType');
+      type = widget.tripData['vehicleType'] ??
+          prefs.getString('selectedVehicleType');
       description = prefs.getString('selectedVehicleDesc') ?? '';
       imagePath = prefs.getString('imagePath');
 
       passengers = widget.tripData['passengers'] is String
-          ? int.tryParse(widget.tripData['passengers']) ?? prefs.getInt('passengers')
+          ? int.tryParse(widget.tripData['passengers']) ??
+              prefs.getInt('passengers')
           : widget.tripData['passengers'] ?? prefs.getInt('passengers');
 
       bags = widget.tripData['bags'] is String
@@ -108,17 +110,24 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
       userId = widget.tripData['user_id'] ?? prefs.getString('user_id');
 
       if (origin == 'distance') {
-        price = widget.tripData['price']?.toDouble() ?? prefs.getDouble('price');
-        distanceKm = widget.tripData['distance_km']?.toDouble() ?? prefs.getDouble('distance_km');
-        durationMin = widget.tripData['duration_min']?.toDouble() ?? prefs.getDouble('duration_min');
+        price =
+            widget.tripData['price']?.toDouble() ?? prefs.getDouble('price');
+        distanceKm = widget.tripData['distance_km']?.toDouble() ??
+            prefs.getDouble('distance_km');
+        durationMin = widget.tripData['duration_min']?.toDouble() ??
+            prefs.getDouble('duration_min');
         pickupAddress = prefs.getString('pickup_address');
         destinationAddress = prefs.getString('destination_address');
         tripDateTime = prefs.getString('trip_datetime');
       } else if (origin == 'route') {
-        fixedPrice = widget.tripData['fixedPrice'] ?? prefs.getString('fixedPrice');
-        pickupAddress1 = widget.tripData['pickup1_address'] ?? prefs.getString('pickup1_address');
-        tripDuration = widget.tripData['trip1_duration'] ?? prefs.getString('trip1_duration');
-        tripDateTime1 = widget.tripData['trip1_datetime'] ?? prefs.getString('trip1_datetime');
+        fixedPrice =
+            widget.tripData['fixedPrice'] ?? prefs.getString('fixedPrice');
+        pickupAddress1 = widget.tripData['pickup1_address'] ??
+            prefs.getString('pickup1_address');
+        tripDuration = widget.tripData['trip1_duration'] ??
+            prefs.getString('trip1_duration');
+        tripDateTime1 = widget.tripData['trip1_datetime'] ??
+            prefs.getString('trip1_datetime');
       }
 
       _isLoading = false;
@@ -153,19 +162,25 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
     }
 
     final regionValue = widget.tripData['region'] ?? prefs.getString('region');
-    final zipcodeValue = widget.tripData['zipcode'] ?? prefs.getString('zipcode');
-    final userIdValue = widget.tripData['user_id'] ?? prefs.getString('user_id');
+    final zipcodeValue =
+        widget.tripData['zipcode'] ?? prefs.getString('zipcode');
+    final userIdValue =
+        widget.tripData['user_id'] ?? prefs.getString('user_id');
 
     if (regionValue == null || zipcodeValue == null || userIdValue == null) {
-      _showErrorSnackBar("Missing required fields: region, zip code, or user ID.");
+      _showErrorSnackBar(
+          "Missing required fields: region, zip code, or user ID.");
       setState(() => _isSubmitting = false);
       return;
     }
 
-    final pickuplocation = widget.tripData['pickuplocation'] ?? prefs.getString('pickup_address');
-    final dropofflocation = widget.tripData['dropofflocation'] ?? prefs.getString('destination_address');
+    final pickuplocation =
+        widget.tripData['pickuplocation'] ?? prefs.getString('pickup_address');
+    final dropofflocation = widget.tripData['dropofflocation'] ??
+        prefs.getString('destination_address');
 
-    if (pickuplocation == null || (servicetype == 'Transfer' && dropofflocation == null)) {
+    if (pickuplocation == null ||
+        (servicetype == 'Transfer' && dropofflocation == null)) {
       _showErrorSnackBar("Missing pickup or dropoff location.");
       setState(() => _isSubmitting = false);
       return;
@@ -187,16 +202,19 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
       'servicetype': servicetype,
       'vehicle_type': type,
       'is_cash': widget.tripData['is_cash'] ?? true,
-      'additionalinfo': widget.tripData['additionalInfo'] ?? prefs.getString('additionalInfo'),
+      'additionalinfo': widget.tripData['additionalInfo'] ??
+          prefs.getString('additionalInfo'),
       'extraInfo': widget.tripData['extraInfo'] ?? prefs.getString('extraInfo'),
     };
 
     try {
       final response = await http.post(
-        Uri.parse('https://utypxmgyfqfwlkpkqrff.supabase.co/functions/v1/create_service_request'),
+        Uri.parse(
+            'https://utypxmgyfqfwlkpkqrff.supabase.co/functions/v1/create_service_request'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${Supabase.instance.client.auth.currentSession?.accessToken ?? ''}',
+          'Authorization':
+              'Bearer ${Supabase.instance.client.auth.currentSession?.accessToken ?? ''}',
         },
         body: jsonEncode(requestData),
       );
@@ -207,9 +225,11 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
         if (!mounted) return;
 
         if (isCash) {
-          Navigator.of(context).push(CustomPageRoute(child: const SuccessPage()));
+          Navigator.of(context)
+              .push(CustomPageRoute(child: const SuccessPage()));
         } else {
-          Navigator.of(context).push(CustomPageRoute(child: PaymentScreen(requestId: userIdValue)));
+          Navigator.of(context).push(
+              CustomPageRoute(child: PaymentScreen(requestId: userIdValue)));
         }
       } else {
         _showErrorDialog(response.statusCode, response.body, requestData);
@@ -242,7 +262,8 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
     );
   }
 
-  void _showErrorDialog(int statusCode, String body, Map<String, dynamic> requestData) {
+  void _showErrorDialog(
+      int statusCode, String body, Map<String, dynamic> requestData) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -252,7 +273,8 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
         ),
         title: const Text(
           "Server Error",
-          style: TextStyle(color: AppTheme.softWhite, fontWeight: FontWeight.bold),
+          style:
+              TextStyle(color: AppTheme.softWhite, fontWeight: FontWeight.bold),
         ),
         content: SingleChildScrollView(
           child: Text(
@@ -331,7 +353,8 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
 
   Widget _buildContent() {
     final formattedDateTime1 = tripDateTime1 != null
-        ? DateFormat('yyyy-MM-dd – HH:mm').format(DateTime.parse(tripDateTime1!))
+        ? DateFormat('yyyy-MM-dd – HH:mm')
+            .format(DateTime.parse(tripDateTime1!))
         : 'N/A';
 
     return Container(
@@ -380,7 +403,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGold.withOpacity(0.2),
+                      color: AppTheme.primaryGold.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(AppTheme.radiusM),
                     ),
                     child: const Icon(
@@ -433,16 +456,19 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
               const SizedBox(height: AppTheme.spaceL),
               _buildDivider(),
               const SizedBox(height: AppTheme.spaceM),
-              _buildInfoRow(Icons.info_outline, 'Description', description ?? 'N/A'),
+              _buildInfoRow(
+                  Icons.info_outline, 'Description', description ?? 'N/A'),
               const SizedBox(height: AppTheme.spaceS),
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatChip(Icons.people_outline, '$passengers', 'Passengers'),
+                    child: _buildStatChip(
+                        Icons.people_outline, '$passengers', 'Passengers'),
                   ),
                   const SizedBox(width: AppTheme.spaceM),
                   Expanded(
-                    child: _buildStatChip(Icons.luggage_outlined, '$bags', 'Bags'),
+                    child:
+                        _buildStatChip(Icons.luggage_outlined, '$bags', 'Bags'),
                   ),
                 ],
               ),
@@ -450,9 +476,11 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
               if (origin == 'distance') ...[
                 _buildPriceSection(),
                 const SizedBox(height: AppTheme.spaceS),
-                _buildInfoRow(Icons.route, 'Distance', '${distanceKm?.toStringAsFixed(2)} km'),
+                _buildInfoRow(Icons.route, 'Distance',
+                    '${distanceKm?.toStringAsFixed(2)} km'),
                 const SizedBox(height: AppTheme.spaceS),
-                _buildInfoRow(Icons.access_time, 'Duration', '${durationMin?.toStringAsFixed(0)} min'),
+                _buildInfoRow(Icons.access_time, 'Duration',
+                    '${durationMin?.toStringAsFixed(0)} min'),
               ] else if (origin == 'route') ...[
                 _buildFixedPriceSection(),
               ],
@@ -475,7 +503,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGold.withOpacity(0.2),
+                  color: AppTheme.primaryGold.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(AppTheme.radiusM),
                 ),
                 child: const Icon(
@@ -499,13 +527,17 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
           const SizedBox(height: AppTheme.spaceL),
           _buildDivider(),
           const SizedBox(height: AppTheme.spaceM),
-          _buildInfoItem("Name", "${widget.tripData['firstName']} ${widget.tripData['lastName']}"),
-          if (widget.tripData['companyName'] != null && widget.tripData['companyName'].isNotEmpty)
+          _buildInfoItem("Name",
+              "${widget.tripData['firstName']} ${widget.tripData['lastName']}"),
+          if (widget.tripData['companyName'] != null &&
+              widget.tripData['companyName'].isNotEmpty)
             _buildInfoItem("Company", widget.tripData['companyName']),
-          _buildInfoItem("Address", "${widget.tripData['address']}, ${widget.tripData['city']}, ${widget.tripData['zipcode']}, ${widget.tripData['region']}"),
+          _buildInfoItem("Address",
+              "${widget.tripData['address']}, ${widget.tripData['city']}, ${widget.tripData['zipcode']}, ${widget.tripData['region']}"),
           _buildInfoItem("Phone", widget.tripData['phone']),
           _buildInfoItem("Email", widget.tripData['email']),
-          _buildInfoItem("Date & Time", origin == 'route' ? formattedDateTime1 : (tripDateTime ?? 'N/A')),
+          _buildInfoItem("Date & Time",
+              origin == 'route' ? formattedDateTime1 : (tripDateTime ?? 'N/A')),
         ],
       ),
     );
@@ -526,7 +558,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
           ),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryGold.withOpacity(0.5),
+              color: AppTheme.primaryGold.withValues(alpha: 0.5),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -540,29 +572,31 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
             child: Center(
               child: _isSubmitting
                   ? const SizedBox(
-                height: 24,
-                width: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.richBlack),
-                ),
-              )
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppTheme.richBlack),
+                      ),
+                    )
                   : const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check_circle_outline, color: AppTheme.richBlack, size: 24),
-                  SizedBox(width: AppTheme.spaceS),
-                  Text(
-                    'Confirm Booking',
-                    style: TextStyle(
-                      color: AppTheme.richBlack,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      letterSpacing: 1.2,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle_outline,
+                            color: AppTheme.richBlack, size: 24),
+                        SizedBox(width: AppTheme.spaceS),
+                        Text(
+                          'Confirm Booking',
+                          style: TextStyle(
+                            color: AppTheme.richBlack,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
             ),
           ),
         ),
@@ -577,7 +611,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
         gradient: LinearGradient(
           colors: [
             Colors.transparent,
-            AppTheme.primaryGold.withOpacity(0.3),
+            AppTheme.primaryGold.withValues(alpha: 0.3),
             Colors.transparent,
           ],
         ),
@@ -616,10 +650,10 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: AppTheme.slate.withOpacity(0.5),
+        color: AppTheme.slate.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppTheme.radiusM),
         border: Border.all(
-          color: AppTheme.primaryGold.withOpacity(0.2),
+          color: AppTheme.primaryGold.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -638,7 +672,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
           Text(
             label,
             style: TextStyle(
-              color: AppTheme.offWhite.withOpacity(0.7),
+              color: AppTheme.offWhite.withValues(alpha: 0.7),
               fontSize: 12,
             ),
           ),
@@ -653,13 +687,13 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.primaryGold.withOpacity(0.2),
-            AppTheme.accentGold.withOpacity(0.1),
+            AppTheme.primaryGold.withValues(alpha: 0.2),
+            AppTheme.accentGold.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(AppTheme.radiusM),
         border: Border.all(
-          color: AppTheme.primaryGold.withOpacity(0.3),
+          color: AppTheme.primaryGold.withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
@@ -693,13 +727,13 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.primaryGold.withOpacity(0.2),
-            AppTheme.accentGold.withOpacity(0.1),
+            AppTheme.primaryGold.withValues(alpha: 0.2),
+            AppTheme.accentGold.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(AppTheme.radiusM),
         border: Border.all(
-          color: AppTheme.primaryGold.withOpacity(0.3),
+          color: AppTheme.primaryGold.withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
@@ -739,7 +773,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> with TickerProviderSt
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: AppTheme.offWhite.withOpacity(0.8),
+                color: AppTheme.offWhite.withValues(alpha: 0.8),
                 fontSize: 14,
               ),
             ),

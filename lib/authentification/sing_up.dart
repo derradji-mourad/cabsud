@@ -150,6 +150,7 @@ class _SignUpScreenState extends State<SignUpScreen>
     }
 
     if (_passwordController.text != _confirmPasswordController.text) {
+      if (!mounted) return;
       _showSnackbar(
         Strings.of(context).passwordMismatch,
         isError: true,
@@ -173,9 +174,11 @@ class _SignUpScreenState extends State<SignUpScreen>
       final user = response.user;
       final createdAt = DateTime.tryParse(user?.createdAt ?? '');
       final isNewUser = createdAt != null &&
-          createdAt.isAfter(preRequestTime.subtract(const Duration(seconds: 2)));
+          createdAt
+              .isAfter(preRequestTime.subtract(const Duration(seconds: 2)));
 
       if (!isNewUser || user == null) {
+        if (!mounted) return;
         _showSnackbar(Strings.of(context).loginFailed, isError: true);
         await Future.delayed(const Duration(seconds: 2));
         if (mounted) {
@@ -193,14 +196,20 @@ class _SignUpScreenState extends State<SignUpScreen>
       if (mounted) {
         _showSnackbar(Strings.of(context).signUpSuccess, isError: false);
         await Future.delayed(const Duration(milliseconds: 800));
-        Navigator.pushReplacementNamed(context, '/login');
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
       }
     } on AuthException catch (error) {
       debugPrint('AuthException: $error');
-      _showSnackbar(Strings.of(context).signUpFailed, isError: true);
+      if (mounted) {
+        _showSnackbar(Strings.of(context).signUpFailed, isError: true);
+      }
     } catch (error) {
       debugPrint('Unexpected error: $error');
-      _showSnackbar(Strings.of(context).signUpFailed, isError: true);
+      if (mounted) {
+        _showSnackbar(Strings.of(context).signUpFailed, isError: true);
+      }
     } finally {
       _loadingNotifier.value = false;
     }
@@ -217,7 +226,9 @@ class _SignUpScreenState extends State<SignUpScreen>
       );
     } catch (error) {
       debugPrint('Google Sign-In failed: $error');
-      _showSnackbar(Strings.of(context).googleSignInFailed, isError: true);
+      if (mounted) {
+        _showSnackbar(Strings.of(context).googleSignInFailed, isError: true);
+      }
     }
   }
 
@@ -226,9 +237,7 @@ class _SignUpScreenState extends State<SignUpScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError
-            ? Colors.red.shade900
-            : LuxuryColors.goldDark,
+        backgroundColor: isError ? Colors.red.shade900 : LuxuryColors.goldDark,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -243,27 +252,31 @@ class _SignUpScreenState extends State<SignUpScreen>
     HapticFeedback.selectionClick();
 
     return await showGeneralDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      barrierLabel: 'Terms of Service',
-      barrierColor: Colors.black87,
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, animation, secondaryAnimation) => const SizedBox.shrink(),
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.9, end: 1.0).animate(
-              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-            ),
-            child: _TermsDialog(
-              onAccept: () => Navigator.of(context).pop(true),
-              onCancel: () => Navigator.of(context).pop(false),
-            ),
-          ),
-        );
-      },
-    ) ?? false;
+          context: context,
+          barrierDismissible: false,
+          barrierLabel: 'Terms of Service',
+          barrierColor: Colors.black87,
+          transitionDuration: const Duration(milliseconds: 300),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const SizedBox.shrink(),
+          transitionBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity:
+                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.9, end: 1.0).animate(
+                  CurvedAnimation(
+                      parent: animation, curve: Curves.easeOutCubic),
+                ),
+                child: _TermsDialog(
+                  onAccept: () => Navigator.of(context).pop(true),
+                  onCancel: () => Navigator.of(context).pop(false),
+                ),
+              ),
+            );
+          },
+        ) ??
+        false;
   }
 
   @override
@@ -404,7 +417,7 @@ class _Logo extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: LuxuryColors.goldMedium.withOpacity(0.2),
+                color: LuxuryColors.goldMedium.withValues(alpha: 0.2),
                 blurRadius: 40,
                 spreadRadius: 10,
               ),
@@ -458,7 +471,7 @@ class _WelcomeText extends StatelessWidget {
           'Create your luxury account',
           style: TextStyle(
             fontSize: 14,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             letterSpacing: 0.5,
           ),
         ),
@@ -532,7 +545,7 @@ class _PasswordField extends StatelessWidget {
           suffixIcon: IconButton(
             icon: Icon(
               isVisible ? Icons.visibility_off : Icons.visibility,
-              color: LuxuryColors.goldMedium.withOpacity(0.7),
+              color: LuxuryColors.goldMedium.withValues(alpha: 0.7),
               size: 22,
             ),
             onPressed: () {
@@ -583,7 +596,7 @@ class _ConfirmPasswordField extends StatelessWidget {
           suffixIcon: IconButton(
             icon: Icon(
               isVisible ? Icons.visibility_off : Icons.visibility,
-              color: LuxuryColors.goldMedium.withOpacity(0.7),
+              color: LuxuryColors.goldMedium.withValues(alpha: 0.7),
               size: 22,
             ),
             onPressed: () {
@@ -617,7 +630,7 @@ class _Divider extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,
-                  LuxuryColors.goldMedium.withOpacity(0.3),
+                  LuxuryColors.goldMedium.withValues(alpha: 0.3),
                 ],
               ),
             ),
@@ -628,7 +641,7 @@ class _Divider extends StatelessWidget {
           child: Text(
             'OR',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               fontSize: 12,
               fontWeight: FontWeight.w600,
               letterSpacing: 1.5,
@@ -641,7 +654,7 @@ class _Divider extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  LuxuryColors.goldMedium.withOpacity(0.3),
+                  LuxuryColors.goldMedium.withValues(alpha: 0.3),
                   Colors.transparent,
                 ],
               ),
@@ -671,7 +684,7 @@ class _LoginPrompt extends StatelessWidget {
         Text(
           alreadyHaveAccount,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontSize: 14,
           ),
         ),
@@ -796,19 +809,19 @@ class _LuxuryTextFieldState extends State<_LuxuryTextField> {
             gradient: LuxuryColors.goldGradient,
             boxShadow: isFocused
                 ? [
-              BoxShadow(
-                color: LuxuryColors.goldMedium.withOpacity(0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ]
+                    BoxShadow(
+                      color: LuxuryColors.goldMedium.withValues(alpha: 0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
                 : [
-              BoxShadow(
-                color: LuxuryColors.goldMedium.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+                    BoxShadow(
+                      color: LuxuryColors.goldMedium.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
           ),
           padding: const EdgeInsets.all(2),
           child: Container(
@@ -831,14 +844,14 @@ class _LuxuryTextFieldState extends State<_LuxuryTextField> {
               decoration: InputDecoration(
                 hintText: widget.hintText,
                 hintStyle: TextStyle(
-                  color: Colors.white.withOpacity(0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
                   fontSize: 14,
                 ),
                 prefixIcon: Icon(
                   widget.prefixIcon,
                   color: isFocused
                       ? LuxuryColors.goldMedium
-                      : LuxuryColors.goldMedium.withOpacity(0.6),
+                      : LuxuryColors.goldMedium.withValues(alpha: 0.6),
                   size: 22,
                 ),
                 suffixIcon: widget.suffixIcon,
@@ -886,26 +899,26 @@ class _LuxuryPrimaryButton extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: isEnabled
             ? const LinearGradient(
-          colors: [
-            LuxuryColors.goldDark,
-            LuxuryColors.goldLight,
-            LuxuryColors.goldAccent,
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        )
+                colors: [
+                  LuxuryColors.goldDark,
+                  LuxuryColors.goldLight,
+                  LuxuryColors.goldAccent,
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              )
             : LinearGradient(
-          colors: [Colors.grey.shade800, Colors.grey.shade700],
-        ),
+                colors: [Colors.grey.shade800, Colors.grey.shade700],
+              ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: isEnabled
             ? [
-          BoxShadow(
-            color: LuxuryColors.goldMedium.withOpacity(0.5),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ]
+                BoxShadow(
+                  color: LuxuryColors.goldMedium.withValues(alpha: 0.5),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
+                ),
+              ]
             : null,
       ),
       child: Material(
@@ -913,27 +926,27 @@ class _LuxuryPrimaryButton extends StatelessWidget {
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(16),
-          splashColor: Colors.white.withOpacity(0.2),
-          highlightColor: Colors.white.withOpacity(0.1),
+          splashColor: Colors.white.withValues(alpha: 0.2),
+          highlightColor: Colors.white.withValues(alpha: 0.1),
           child: Center(
             child: isLoading
                 ? const SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.black87),
-              ),
-            )
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.black87),
+                    ),
+                  )
                 : Text(
-              label.toUpperCase(),
-              style: TextStyle(
-                color: isEnabled ? Colors.black87 : Colors.grey.shade600,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.5,
-              ),
-            ),
+                    label.toUpperCase(),
+                    style: TextStyle(
+                      color: isEnabled ? Colors.black87 : Colors.grey.shade600,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
           ),
         ),
       ),
@@ -963,7 +976,7 @@ class _LuxurySecondaryButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -974,8 +987,8 @@ class _LuxurySecondaryButton extends StatelessWidget {
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(16),
-          splashColor: Colors.black.withOpacity(0.05),
-          highlightColor: Colors.black.withOpacity(0.03),
+          splashColor: Colors.black.withValues(alpha: 0.05),
+          highlightColor: Colors.black.withValues(alpha: 0.03),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -1024,12 +1037,12 @@ class _TermsDialog extends StatelessWidget {
           color: LuxuryColors.backgroundMedium,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: LuxuryColors.goldMedium.withOpacity(0.3),
+            color: LuxuryColors.goldMedium.withValues(alpha: 0.3),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: LuxuryColors.goldMedium.withOpacity(0.2),
+              color: LuxuryColors.goldMedium.withValues(alpha: 0.2),
               blurRadius: 30,
               offset: const Offset(0, 15),
             ),
@@ -1061,7 +1074,7 @@ class _TermsDialog extends StatelessWidget {
                   color: LuxuryColors.backgroundDark,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: LuxuryColors.goldMedium.withOpacity(0.2),
+                    color: LuxuryColors.goldMedium.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -1071,7 +1084,7 @@ class _TermsDialog extends StatelessWidget {
                   child: Text(
                     Strings.of(context).termsOfServiceContent,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 14,
                       height: 1.6,
                     ),
@@ -1125,16 +1138,16 @@ class _DialogButton extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: isPrimary
             ? const LinearGradient(
-          colors: [LuxuryColors.goldDark, LuxuryColors.goldLight],
-        )
+                colors: [LuxuryColors.goldDark, LuxuryColors.goldLight],
+              )
             : null,
         color: isPrimary ? null : LuxuryColors.backgroundDark,
         borderRadius: BorderRadius.circular(12),
         border: !isPrimary
             ? Border.all(
-          color: LuxuryColors.goldMedium.withOpacity(0.3),
-          width: 1.5,
-        )
+                color: LuxuryColors.goldMedium.withValues(alpha: 0.3),
+                width: 1.5,
+              )
             : null,
       ),
       child: Material(
@@ -1142,15 +1155,13 @@ class _DialogButton extends StatelessWidget {
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(12),
-          splashColor: Colors.white.withOpacity(0.2),
-          highlightColor: Colors.white.withOpacity(0.1),
+          splashColor: Colors.white.withValues(alpha: 0.2),
+          highlightColor: Colors.white.withValues(alpha: 0.1),
           child: Center(
             child: Text(
               label,
               style: TextStyle(
-                color: isPrimary
-                    ? Colors.black87
-                    : LuxuryColors.goldLight,
+                color: isPrimary ? Colors.black87 : LuxuryColors.goldLight,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,

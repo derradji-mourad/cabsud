@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../localization/string.dart';
+import 'package:cabsudapp/reuse/theme.dart';
 
-class _LuxuryColors {
-  static const goldLight = Color(0xFFF7EF8A);
-  static const goldMedium = Color(0xFFD4AF37);
-  static const goldDark = Color(0xFFAE8625);
-  static const goldAccent = Color(0xFFEDC967);
-  static const backgroundDark = Color(0xFF0A0A0A);
-  static const backgroundMedium = Color(0xFF121212);
-}
+// Removed _LuxuryColors class as we now use AppTheme
 
 class IntroPage2 extends StatefulWidget {
   const IntroPage2({super.key});
@@ -66,9 +60,9 @@ class _IntroPage2State extends State<IntroPage2>
   @override
   Widget build(BuildContext context) {
     if (!_isLanguageLoaded) {
-      return Scaffold(
-        backgroundColor: _LuxuryColors.backgroundDark,
-        body: const Center(child: _LuxuryLoadingIndicator()),
+      return const Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Center(child: _LuxuryLoadingIndicator()),
       );
     }
 
@@ -79,18 +73,18 @@ class _IntroPage2State extends State<IntroPage2>
     final descriptionFontSize = screenSize.width * 0.042;
 
     return Scaffold(
-      backgroundColor: _LuxuryColors.backgroundDark,
+      backgroundColor: AppTheme.background,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                _LuxuryColors.backgroundDark,
-                _LuxuryColors.backgroundMedium,
-                _LuxuryColors.backgroundDark,
+                AppTheme.background,
+                AppTheme.card,
+                AppTheme.background,
               ],
             ),
           ),
@@ -145,13 +139,13 @@ class _LuxuryLoadingIndicator extends StatelessWidget {
           height: 50,
           child: CircularProgressIndicator(
             strokeWidth: 2.5,
-            valueColor: AlwaysStoppedAnimation<Color>(_LuxuryColors.goldMedium),
+            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
           ),
         ),
         const SizedBox(height: 24),
         ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
-            colors: [_LuxuryColors.goldDark, _LuxuryColors.goldLight],
+            colors: [AppTheme.secondary, AppTheme.primary],
           ).createShader(bounds),
           child: const Text(
             'CHARGEMENT...',
@@ -191,23 +185,23 @@ class _LuxuryImageCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 gradient: const LinearGradient(
                   colors: [
-                    _LuxuryColors.goldDark,
-                    _LuxuryColors.goldLight,
-                    _LuxuryColors.goldMedium,
-                    _LuxuryColors.goldAccent,
+                    AppTheme.secondary,
+                    AppTheme.primary,
+                    AppTheme.primary,
+                    AppTheme.accent,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: _LuxuryColors.goldMedium.withOpacity(0.3),
+                    color: AppTheme.primary.withValues(alpha: 0.3),
                     blurRadius: 24,
                     offset: const Offset(0, 12),
                     spreadRadius: -4,
                   ),
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     blurRadius: 32,
                     offset: const Offset(0, 16),
                     spreadRadius: -8,
@@ -232,13 +226,13 @@ class _LuxuryImageCard extends StatelessWidget {
             width: size,
             height: size,
             decoration: BoxDecoration(
-              color: _LuxuryColors.backgroundMedium,
+              color: AppTheme.card,
               borderRadius: BorderRadius.circular(24),
             ),
             child: const Center(
               child: CircularProgressIndicator(
                 strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(_LuxuryColors.goldLight),
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
               ),
             ),
           );
@@ -259,9 +253,9 @@ class _LuxuryTitle extends StatelessWidget {
     return ShaderMask(
       shaderCallback: (bounds) => const LinearGradient(
         colors: [
-          _LuxuryColors.goldLight,
-          _LuxuryColors.goldAccent,
-          _LuxuryColors.goldMedium,
+          AppTheme.primary,
+          AppTheme.accent,
+          AppTheme.primary,
         ],
       ).createShader(bounds),
       child: Text(
@@ -299,17 +293,17 @@ class _LuxuryDescriptionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           gradient: const LinearGradient(
             colors: [
-              _LuxuryColors.goldDark,
-              _LuxuryColors.goldLight,
-              _LuxuryColors.goldMedium,
-              _LuxuryColors.goldAccent,
+              AppTheme.secondary,
+              AppTheme.primary,
+              AppTheme.primary,
+              AppTheme.accent,
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           boxShadow: [
             BoxShadow(
-              color: _LuxuryColors.goldMedium.withOpacity(0.2),
+              color: AppTheme.primary.withValues(alpha: 0.2),
               blurRadius: 20,
               offset: const Offset(0, 10),
               spreadRadius: -4,
@@ -321,14 +315,14 @@ class _LuxuryDescriptionCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16.5),
-            color: _LuxuryColors.backgroundDark,
+            color: AppTheme.background,
           ),
           child: Text(
             text,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: fontSize,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               height: 1.6,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.3,

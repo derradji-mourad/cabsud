@@ -2,16 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../localization/string.dart';
+import 'package:cabsudapp/reuse/theme.dart';
 
 /// Luxury color palette
-class _LuxuryColors {
-  static const goldLight = Color(0xFFF7EF8A);
-  static const goldMedium = Color(0xFFD4AF37);
-  static const goldDark = Color(0xFFAE8625);
-  static const goldAccent = Color(0xFFEDC967);
-  static const backgroundDark = Color(0xFF0A0A0A);
-  static const backgroundMedium = Color(0xFF121212);
-}
+// Removed _LuxuryColors class as we now use AppTheme
 
 class IntroPage1 extends StatefulWidget {
   const IntroPage1({super.key});
@@ -78,7 +72,8 @@ class _IntroPage1State extends State<IntroPage1>
       barrierLabel: 'Language Selection',
       barrierColor: Colors.black87,
       transitionDuration: const Duration(milliseconds: 350),
-      pageBuilder: (context, animation, secondaryAnimation) => const SizedBox.shrink(),
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          const SizedBox.shrink(),
       transitionBuilder: (context, animation, secondaryAnimation, child) {
         return FadeTransition(
           opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
@@ -92,10 +87,10 @@ class _IntroPage1State extends State<IntroPage1>
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setString('language', languageCode);
                 Strings.load(languageCode);
-                if (mounted) {
-                  Navigator.of(context).pop();
-                  setState(() {});
-                }
+                if (!mounted) return;
+                // ignore: use_build_context_synchronously
+                Navigator.of(context).pop();
+                setState(() {});
               },
             ),
           ),
@@ -107,9 +102,9 @@ class _IntroPage1State extends State<IntroPage1>
   @override
   Widget build(BuildContext context) {
     if (!_isLanguageLoaded) {
-      return Scaffold(
-        backgroundColor: _LuxuryColors.backgroundDark,
-        body: const Center(child: _LuxuryLoadingIndicator()),
+      return const Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Center(child: _LuxuryLoadingIndicator()),
       );
     }
 
@@ -120,18 +115,18 @@ class _IntroPage1State extends State<IntroPage1>
     final descriptionFontSize = screenSize.width * 0.042;
 
     return Scaffold(
-      backgroundColor: _LuxuryColors.backgroundDark,
+      backgroundColor: AppTheme.background,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                _LuxuryColors.backgroundDark,
-                _LuxuryColors.backgroundMedium,
-                _LuxuryColors.backgroundDark,
+                AppTheme.background,
+                AppTheme.card,
+                AppTheme.background,
               ],
             ),
           ),
@@ -186,13 +181,13 @@ class _LuxuryLoadingIndicator extends StatelessWidget {
           height: 50,
           child: CircularProgressIndicator(
             strokeWidth: 2.5,
-            valueColor: AlwaysStoppedAnimation<Color>(_LuxuryColors.goldMedium),
+            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
           ),
         ),
         const SizedBox(height: 24),
         ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
-            colors: [_LuxuryColors.goldDark, _LuxuryColors.goldLight],
+            colors: [AppTheme.secondary, AppTheme.primary],
           ).createShader(bounds),
           child: const Text(
             'CHARGEMENT...',
@@ -232,23 +227,23 @@ class _LuxuryImageCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 gradient: const LinearGradient(
                   colors: [
-                    _LuxuryColors.goldDark,
-                    _LuxuryColors.goldLight,
-                    _LuxuryColors.goldMedium,
-                    _LuxuryColors.goldAccent,
+                    AppTheme.secondary,
+                    AppTheme.primary,
+                    AppTheme.primary,
+                    AppTheme.accent,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: _LuxuryColors.goldMedium.withOpacity(0.3),
+                    color: AppTheme.primary.withValues(alpha: 0.3),
                     blurRadius: 24,
                     offset: const Offset(0, 12),
                     spreadRadius: -4,
                   ),
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     blurRadius: 32,
                     offset: const Offset(0, 16),
                     spreadRadius: -8,
@@ -273,13 +268,13 @@ class _LuxuryImageCard extends StatelessWidget {
             width: size,
             height: size,
             decoration: BoxDecoration(
-              color: _LuxuryColors.backgroundMedium,
+              color: AppTheme.card,
               borderRadius: BorderRadius.circular(24),
             ),
             child: const Center(
               child: CircularProgressIndicator(
                 strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(_LuxuryColors.goldLight),
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
               ),
             ),
           );
@@ -300,9 +295,9 @@ class _LuxuryTitle extends StatelessWidget {
     return ShaderMask(
       shaderCallback: (bounds) => const LinearGradient(
         colors: [
-          _LuxuryColors.goldLight,
-          _LuxuryColors.goldAccent,
-          _LuxuryColors.goldMedium,
+          AppTheme.primary,
+          AppTheme.accent,
+          AppTheme.primary,
         ],
       ).createShader(bounds),
       child: Text(
@@ -340,17 +335,17 @@ class _LuxuryDescriptionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           gradient: const LinearGradient(
             colors: [
-              _LuxuryColors.goldDark,
-              _LuxuryColors.goldLight,
-              _LuxuryColors.goldMedium,
-              _LuxuryColors.goldAccent,
+              AppTheme.secondary,
+              AppTheme.primary,
+              AppTheme.primary,
+              AppTheme.accent,
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           boxShadow: [
             BoxShadow(
-              color: _LuxuryColors.goldMedium.withOpacity(0.2),
+              color: AppTheme.primary.withValues(alpha: 0.2),
               blurRadius: 20,
               offset: const Offset(0, 10),
               spreadRadius: -4,
@@ -362,14 +357,14 @@ class _LuxuryDescriptionCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16.5),
-            color: _LuxuryColors.backgroundDark,
+            color: AppTheme.background,
           ),
           child: Text(
             text,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: fontSize,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               height: 1.6,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.3,
@@ -399,15 +394,15 @@ class _LanguageDialogState extends State<_LanguageDialog> {
       backgroundColor: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
-          color: _LuxuryColors.backgroundMedium,
+          color: AppTheme.card,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: _LuxuryColors.goldMedium.withOpacity(0.3),
+            color: AppTheme.primary.withValues(alpha: 0.3),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: _LuxuryColors.goldMedium.withOpacity(0.2),
+              color: AppTheme.primary.withValues(alpha: 0.2),
               blurRadius: 30,
               offset: const Offset(0, 15),
             ),
@@ -419,7 +414,7 @@ class _LanguageDialogState extends State<_LanguageDialog> {
           children: [
             ShaderMask(
               shaderCallback: (bounds) => const LinearGradient(
-                colors: [_LuxuryColors.goldDark, _LuxuryColors.goldLight],
+                colors: [AppTheme.secondary, AppTheme.primary],
               ).createShader(bounds),
               child: const Text(
                 'CHOISIR LA LANGUE',
@@ -458,27 +453,27 @@ class _LanguageDialogState extends State<_LanguageDialog> {
             gradient: LinearGradient(
               colors: isHovered
                   ? [
-                _LuxuryColors.goldDark,
-                _LuxuryColors.goldLight,
-                _LuxuryColors.goldAccent,
-              ]
+                      AppTheme.secondary,
+                      AppTheme.primary,
+                      AppTheme.accent,
+                    ]
                   : [
-                _LuxuryColors.goldDark.withOpacity(0.8),
-                _LuxuryColors.goldLight.withOpacity(0.8),
-                _LuxuryColors.goldAccent.withOpacity(0.8),
-              ],
+                      AppTheme.secondary.withValues(alpha: 0.8),
+                      AppTheme.primary.withValues(alpha: 0.8),
+                      AppTheme.accent.withValues(alpha: 0.8),
+                    ],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
             borderRadius: BorderRadius.circular(14),
             boxShadow: isHovered
                 ? [
-              BoxShadow(
-                color: _LuxuryColors.goldMedium.withOpacity(0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ]
+                    BoxShadow(
+                      color: AppTheme.primary.withValues(alpha: 0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
                 : null,
           ),
           child: Row(

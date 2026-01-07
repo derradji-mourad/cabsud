@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cabsudapp/localization/string.dart';
+import 'package:cabsudapp/reuse/theme.dart';
 import '../custom_page_route.dart';
 import '../home_page.dart';
 
@@ -40,24 +41,31 @@ class ServicesPageState extends State<ServicesPage> {
     }
 
     final List<_ServiceItem> services = [
-      _ServiceItem(Strings.of(context).chauffeurTitle, Strings.of(context).chauffeurDesc, Icons.directions_car),
-      _ServiceItem(Strings.of(context).prixFixesTitle, Strings.of(context).prixFixesDesc, Icons.attach_money),
-      _ServiceItem(Strings.of(context).vehiculesTitle, Strings.of(context).vehiculesDesc, Icons.car_repair),
-      _ServiceItem(Strings.of(context).wifiTitle, Strings.of(context).wifiDesc, Icons.wifi),
-      _ServiceItem(Strings.of(context).enfantsTitle, Strings.of(context).enfantsDesc, Icons.child_care),
-      _ServiceItem(Strings.of(context).paiementTitle, Strings.of(context).paiementDesc, Icons.payment),
-      _ServiceItem(Strings.of(context).paiementSecuTitle, Strings.of(context).paiementSecuDesc, Icons.credit_card),
+      _ServiceItem(Strings.of(context).chauffeurTitle,
+          Strings.of(context).chauffeurDesc, Icons.directions_car),
+      _ServiceItem(Strings.of(context).prixFixesTitle,
+          Strings.of(context).prixFixesDesc, Icons.attach_money),
+      _ServiceItem(Strings.of(context).vehiculesTitle,
+          Strings.of(context).vehiculesDesc, Icons.car_repair),
+      _ServiceItem(Strings.of(context).wifiTitle, Strings.of(context).wifiDesc,
+          Icons.wifi),
+      _ServiceItem(Strings.of(context).enfantsTitle,
+          Strings.of(context).enfantsDesc, Icons.child_care),
+      _ServiceItem(Strings.of(context).paiementTitle,
+          Strings.of(context).paiementDesc, Icons.payment),
+      _ServiceItem(Strings.of(context).paiementSecuTitle,
+          Strings.of(context).paiementSecuDesc, Icons.credit_card),
     ];
 
     return Scaffold(
       appBar: AppBar(
         title: Text(Strings.of(context).servicesTitle),
-        backgroundColor: Colors.black,
+        backgroundColor: AppTheme.background,
         centerTitle: true,
         elevation: 2,
       ),
       body: Container(
-        color: Colors.black,
+        color: AppTheme.background,
         child: ListView.builder(
           padding: const EdgeInsets.all(20),
           itemCount: services.length + 1,
@@ -81,17 +89,18 @@ class ServicesPageState extends State<ServicesPage> {
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [
-                Color(0xFFAE8625),
-                Color(0xFFF7EF8A),
-                Color(0xFFD2AC47),
-                Color(0xFFEDC967)
+                AppTheme.secondary,
+                AppTheme.primary,
+                AppTheme.primary,
+                AppTheme.accent
               ],
             ),
             borderRadius: BorderRadius.circular(30),
           ),
           child: ElevatedButton(
             onPressed: () {
-              Navigator.of(context).push(CustomPageRoute(child: const HomePage()));
+              Navigator.of(context)
+                  .push(CustomPageRoute(child: const HomePage()));
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
@@ -105,7 +114,7 @@ class ServicesPageState extends State<ServicesPage> {
               Strings.of(context).gotoHomeBtn,
               style: const TextStyle(
                 fontSize: 18,
-                color: Colors.black,
+                color: AppTheme.background,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -137,7 +146,12 @@ class ServiceCard extends StatelessWidget {
   });
 
   static const _gradient = LinearGradient(
-    colors: [Color(0xFFAE8625), Color(0xFFF7EF8A), Color(0xFFD2AC47), Color(0xFFEDC967)],
+    colors: [
+      AppTheme.secondary,
+      AppTheme.primary,
+      AppTheme.primary,
+      AppTheme.accent
+    ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -153,7 +167,7 @@ class ServiceCard extends StatelessWidget {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.black,
+          color: AppTheme.background,
           borderRadius: BorderRadius.circular(15),
         ),
         padding: const EdgeInsets.all(16),
@@ -166,7 +180,7 @@ class ServiceCard extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               padding: const EdgeInsets.all(10),
-              child: Icon(icon, size: 30, color: Colors.black),
+              child: Icon(icon, size: 30, color: AppTheme.background),
             ),
             const SizedBox(width: 20),
             Expanded(
@@ -178,7 +192,7 @@ class ServiceCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFFF7EF8A),
+                      color: AppTheme.primary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -186,7 +200,7 @@ class ServiceCard extends StatelessWidget {
                     description,
                     style: const TextStyle(
                       fontSize: 16,
-                      color: Color(0xFFEDC967),
+                      color: AppTheme.secondary,
                     ),
                   ),
                 ],

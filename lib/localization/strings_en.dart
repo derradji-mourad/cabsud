@@ -2,18 +2,24 @@ class StringsEn {
   Map<String, String> getStrings() {
     return {
       'appTitle': 'Welcome to Cab-Sud',
-      'descriptionText': 'Cab-Sud, specialist in transportation in Marseille, offers a fast and pleasant service.',
+      'descriptionText':
+          'Cab-Sud, specialist in transportation in Marseille, offers a fast and pleasant service.',
 
       'airport_transfer_title': 'AIRPORT TRANSFER',
-      'airport_transfer_description': 'Cab-Sud, your solution for airport transfers in Marseille, combines convenience and style.',
+      'airport_transfer_description':
+          'Cab-Sud, your solution for airport transfers in Marseille, combines convenience and style.',
       'cruiseTransferTitle': 'CRUISE PORT TRANSFER',
-      'cruiseTransferDescription': 'Cab-Sud, your tailored cruise port transfer with punctuality and quality.',
+      'cruiseTransferDescription':
+          'Cab-Sud, your tailored cruise port transfer with punctuality and quality.',
       'trainTransferTitle': 'TRAIN STATION TRANSFER',
-      'trainTransferDescription': 'Cab-Sud, your Marseille partner for comfortable and efficient journeys.',
+      'trainTransferDescription':
+          'Cab-Sud, your Marseille partner for comfortable and efficient journeys.',
       'introTitle5': 'WELCOME TO CAB-SUD',
-      'introDescription5': 'Cab-Sud, premium transport in Marseille to explore the region with peace of mind.',
+      'introDescription5':
+          'Cab-Sud, premium transport in Marseille to explore the region with peace of mind.',
       'introTitle6': 'PRIVATE DRIVER SERVICE',
-      'introDescription6': 'For your events, our vehicles offer safety and distinction.',
+      'introDescription6':
+          'For your events, our vehicles offer safety and distinction.',
 
       'skipButton': 'SKIP',
       'nextButton': 'NEXT',
@@ -38,8 +44,6 @@ class StringsEn {
 
       'logoutButton': 'Logout',
 
-
-
       'email': 'Email',
       'password': 'Password',
       'confirmPassword': 'Confirm Password',
@@ -51,7 +55,8 @@ class StringsEn {
       'emailRequired2': 'Email is required',
       'confirmPasswordRequired': 'Confirm Password is required',
       'passwordMismatch': 'Passwords do not match',
-      'passwordStrength': 'Must contain 1 uppercase, 1 number, 1 special character',
+      'passwordStrength':
+          'Must contain 1 uppercase, 1 number, 1 special character',
 
       'agree': 'I Agree',
       'cancel': 'Cancel',
@@ -59,7 +64,7 @@ class StringsEn {
       'signUpFailed': 'Sign-Up Failed: ',
       'googleSignInFailed': 'Google Sign-In Failed',
       'emailInvalid': 'Enter a valid email',
-      'termsOfServicecontent': '''
+      'termsOfServiceContent': '''
 Welcome to our CAB-SUD. By signing up and using our services, you agree to the following Terms of Service:
 
 1. You agree to use the app for lawful ride-sharing purposes only.
@@ -90,7 +95,8 @@ For support, contact us at khaleddarradji@gmail.com.
       'gotoHomeBtn': 'Go to Home Page',
 
       'contactTitle': 'Contact Us',
-      'contactSubtitle': 'We would love to hear from you! Please fill in the form below.',
+      'contactSubtitle':
+          'We would love to hear from you! Please fill in the form below.',
       'fullNameLabel': 'Full Name',
       'fullNameHint': 'Enter your full name',
       'phoneLabel': 'Phone Number',
@@ -158,7 +164,8 @@ For support, contact us at khaleddarradji@gmail.com.
       'continueButton2': 'CONTINUE',
 
       'infoTitle': 'Important Information',
-      'infoDescription': 'The reservation service requires payment to be made exclusively inside the vehicle.',
+      'infoDescription':
+          'The reservation service requires payment to be made exclusively inside the vehicle.',
       'understood': 'I UNDERSTAND',
       'planJourney': 'Plan Your Journey',
       'departureAddress': 'Departure Address',
@@ -167,11 +174,9 @@ For support, contact us at khaleddarradji@gmail.com.
       'hours': 'Hours',
       'continue': 'CONTINUE',
 
-      'commandSuccessMessage': 'Command completed successfully!\nYou will be contacted soon.',
+      'commandSuccessMessage':
+          'Command completed successfully!\nYou will be contacted soon.',
       'backToHome': 'Go back to the home page',
-
-      'selectVehicleFirst': 'Please select a vehicle first', // EN
-
 
       'adresseInvalide': 'Invalid address',
       'erreurCalcul': 'Error calculating the distance',
@@ -187,7 +192,27 @@ For support, contact us at khaleddarradji@gmail.com.
 
       'emailSentSuccess': 'Email sent successfully!',
       'emailSentError': 'Failed to send email. Please try again later.',
+
+      // Quick Service
+      'quickServiceTitle': 'Quick Trip',
+      'quickServiceSubtitle': 'Book your ride quickly',
+      'passengerName': 'Passenger Name',
+      'passengerNameHint': 'Enter your name',
+      'requestTrip': 'REQUEST TRIP',
+      'tripRequested': 'Trip requested successfully!',
+      'tripRequestError': 'Error requesting trip. Please try again.',
+      'nameRequired': 'Name is required',
+      'pickupRequired': 'Pickup address is required',
+      'dropoffRequired': 'Dropoff address is required',
+      'calculatingFares': 'Estimating prices...',
+      'selectVehicle': 'Select Vehicle',
+      'selectVehicleFirst': 'Please select a vehicle first',
+
+      // Payment
+      'paymentMethod': 'Payment Method',
+      'cash': 'Cash',
+      'card': 'Credit Card',
+      'payOnBoard': 'Pay on board',
     };
   }
 }
-

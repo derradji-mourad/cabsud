@@ -10,15 +10,9 @@ import 'package:cabsudapp/intro_screens/intro_page_6.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:cabsudapp/localization/string.dart';
 
-/// Luxury color palette
-class _LuxuryColors {
-  static const goldLight = Color(0xFFF7EF8A);
-  static const goldMedium = Color(0xFFD4AF37);
-  static const goldDark = Color(0xFFAE8625);
-  static const goldAccent = Color(0xFFEDC967);
-  static const backgroundDark = Color(0xFF0A0A0A);
-  static const backgroundMedium = Color(0xFF121212);
-}
+import 'package:cabsudapp/reuse/theme.dart';
+
+// Removed _LuxuryColors class as we now use AppTheme
 
 /// Premium onboarding screen with luxury animations and micro-interactions.
 ///
@@ -41,7 +35,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   late final AnimationController _controlsAnimationController;
   late final Animation<double> _controlsFadeAnimation;
 
-  int _currentPageIndex = 0;
   bool _isOnLastPage = false;
 
   static const int _totalPages = 6;
@@ -86,7 +79,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   void _onPageChanged(int pageIndex) {
     setState(() {
-      _currentPageIndex = pageIndex;
       _isOnLastPage = (pageIndex == _totalPages - 1);
     });
 
@@ -116,7 +108,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const SignUpScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const SignUpScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = 0.0;
           const end = 1.0;
@@ -129,7 +122,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           return FadeTransition(
             opacity: tween.animate(curvedAnimation),
             child: ScaleTransition(
-              scale: Tween<double>(begin: 0.95, end: 1.0).animate(curvedAnimation),
+              scale:
+                  Tween<double>(begin: 0.95, end: 1.0).animate(curvedAnimation),
               child: child,
             ),
           );
@@ -142,7 +136,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _LuxuryColors.backgroundDark,
+      backgroundColor: AppTheme.background,
       body: Stack(
         children: [
           // Page view with custom physics
@@ -183,8 +177,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               end: Alignment.bottomCenter,
               colors: [
                 Colors.transparent,
-                _LuxuryColors.backgroundDark.withOpacity(0.7),
-                _LuxuryColors.backgroundDark,
+                AppTheme.background.withValues(alpha: 0.7),
+                AppTheme.background,
               ],
             ),
           ),
@@ -213,8 +207,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         controller: _pageController,
         count: _totalPages,
         effect: ExpandingDotsEffect(
-          activeDotColor: _LuxuryColors.goldLight,
-          dotColor: _LuxuryColors.goldMedium.withOpacity(0.3),
+          activeDotColor: AppTheme.primary,
+          dotColor: AppTheme.secondary.withValues(alpha: 0.3),
           dotHeight: 10,
           dotWidth: 10,
           expansionFactor: 4,
@@ -275,26 +269,30 @@ class _LuxuryTextButtonState extends State<_LuxuryTextButton> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: widget.onPressed != null ? (_) {
-        HapticFeedback.lightImpact();
-        setState(() => _isPressed = true);
-      } : null,
-      onTapUp: widget.onPressed != null ? (_) {
-        setState(() => _isPressed = false);
-        widget.onPressed?.call();
-      } : null,
+      onTapDown: widget.onPressed != null
+          ? (_) {
+              HapticFeedback.lightImpact();
+              setState(() => _isPressed = true);
+            }
+          : null,
+      onTapUp: widget.onPressed != null
+          ? (_) {
+              setState(() => _isPressed = false);
+              widget.onPressed?.call();
+            }
+          : null,
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: _isPressed
-              ? _LuxuryColors.goldMedium.withOpacity(0.1)
+              ? AppTheme.secondary.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: _isPressed
-                ? _LuxuryColors.goldMedium.withOpacity(0.3)
+                ? AppTheme.secondary.withValues(alpha: 0.3)
                 : Colors.transparent,
             width: 1.5,
           ),
@@ -303,8 +301,8 @@ class _LuxuryTextButtonState extends State<_LuxuryTextButton> {
           widget.label,
           style: TextStyle(
             color: _isPressed
-                ? _LuxuryColors.goldLight
-                : Colors.white.withOpacity(0.7),
+                ? AppTheme.primary
+                : Colors.white.withValues(alpha: 0.7),
             fontSize: 15,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
@@ -356,9 +354,9 @@ class _LuxuryPrimaryButtonState extends State<_LuxuryPrimaryButton> {
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [
-                _LuxuryColors.goldDark,
-                _LuxuryColors.goldLight,
-                _LuxuryColors.goldAccent,
+                AppTheme.darkGold,
+                AppTheme.primary,
+                AppTheme.accent,
               ],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
@@ -366,19 +364,19 @@ class _LuxuryPrimaryButtonState extends State<_LuxuryPrimaryButton> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: _isPressed
                 ? [
-              BoxShadow(
-                color: _LuxuryColors.goldMedium.withOpacity(0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 6),
-              ),
-            ]
+                    BoxShadow(
+                      color: AppTheme.secondary.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
                 : [
-              BoxShadow(
-                color: _LuxuryColors.goldMedium.withOpacity(0.5),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
-              ),
-            ],
+                    BoxShadow(
+                      color: AppTheme.secondary.withValues(alpha: 0.5),
+                      blurRadius: 24,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

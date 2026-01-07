@@ -10,10 +10,13 @@ import 'package:cabsudapp/custom_page_route.dart';
 import 'package:cabsudapp/reuse/theme.dart';
 import 'car_type.dart';
 import '../localization/string.dart';
+import 'package:geolocator/geolocator.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:cabsudapp/reuse/map_style.dart';
 
-const String googleApiKey = ''; // Deprecated: Use dotenv.env['GOOGLE_MAPS_API_KEY']
+const String googleApiKey =
+    ''; // Deprecated: Use dotenv.env['GOOGLE_MAPS_API_KEY']
 
 class RoutePage extends StatefulWidget {
   const RoutePage({super.key});
@@ -81,7 +84,7 @@ class RoutePageState extends State<RoutePage> with TickerProviderStateMixin {
           return Transform.scale(
             scale: value,
             child: Opacity(
-              opacity: value,
+              opacity: value.clamp(0.0, 1.0),
               child: Dialog(
                 backgroundColor: Colors.transparent,
                 child: Container(
@@ -99,7 +102,7 @@ class RoutePageState extends State<RoutePage> with TickerProviderStateMixin {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primaryGold.withOpacity(0.6),
+                        color: AppTheme.primaryGold.withValues(alpha: 0.6),
                         blurRadius: 40,
                         spreadRadius: 5,
                       ),
@@ -112,7 +115,7 @@ class RoutePageState extends State<RoutePage> with TickerProviderStateMixin {
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: AppTheme.richBlack.withOpacity(0.3),
+                          color: AppTheme.richBlack.withValues(alpha: 0.3),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -215,8 +218,8 @@ class RoutePageState extends State<RoutePage> with TickerProviderStateMixin {
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
                             colors: [
-                              AppTheme.primaryGold.withOpacity(0.2),
-                              AppTheme.primaryGold.withOpacity(0.1),
+                              AppTheme.primaryGold.withValues(alpha: 0.2),
+                              AppTheme.primaryGold.withValues(alpha: 0.1),
                             ],
                           ),
                         ),
@@ -232,7 +235,8 @@ class RoutePageState extends State<RoutePage> with TickerProviderStateMixin {
                         height: 40,
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
-                          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGold),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              AppTheme.primaryGold),
                         ),
                       ),
                     ],
@@ -271,7 +275,7 @@ class RoutePageState extends State<RoutePage> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.richBlack.withOpacity(0.3),
+            AppTheme.richBlack.withValues(alpha: 0.3),
             Colors.transparent,
           ],
           begin: Alignment.topCenter,
@@ -284,7 +288,7 @@ class RoutePageState extends State<RoutePage> with TickerProviderStateMixin {
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGold.withOpacity(0.2),
+                color: AppTheme.primaryGold.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -338,9 +342,11 @@ class LuxuryRouteInterface extends StatefulWidget {
 class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
     with SingleTickerProviderStateMixin {
   final TextEditingController _departureController = TextEditingController();
-  final ValueNotifier<List<String>> _suggestionsNotifier = ValueNotifier<List<String>>([]);
+  final ValueNotifier<List<String>> _suggestionsNotifier =
+      ValueNotifier<List<String>>([]);
   final ValueNotifier<int> _durationNotifier = ValueNotifier<int>(1);
-  final ValueNotifier<DateTime?> _dateTimeNotifier = ValueNotifier<DateTime?>(null);
+  final ValueNotifier<DateTime?> _dateTimeNotifier =
+      ValueNotifier<DateTime?>(null);
   final ValueNotifier<LatLng?> _locationNotifier = ValueNotifier<LatLng?>(null);
   final ValueNotifier<int> _currentStepNotifier = ValueNotifier<int>(0);
 
@@ -353,8 +359,8 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
     super.initState();
     _stepAnimController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
     );
+    _fillCurrentLocation();
   }
 
   @override
@@ -398,8 +404,56 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
     _debounceTimer?.cancel();
     _debounceTimer = Timer(
       const Duration(milliseconds: 400),
-          () => _fetchSuggestions(value),
+      () => _fetchSuggestions(value),
     );
+  }
+
+  Future<void> _fillCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+
+    if (permission == LocationPermission.deniedForever) return;
+
+    try {
+      final position = await Geolocator.getCurrentPosition();
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final address = '${place.street}, ${place.locality}, ${place.country}';
+
+        if (mounted) {
+          setState(() {
+            _departureController.text = address;
+          });
+
+          final latLng = LatLng(position.latitude, position.longitude);
+          _locationNotifier.value = latLng;
+          _currentStepNotifier.value =
+              1; // Move to next step if desired or just fill it
+
+          // Animate map if map controller is ready (might not be yet, but we update notifier)
+          if (_mapController != null) {
+            _mapController!
+                .animateCamera(CameraUpdate.newLatLngZoom(latLng, 15));
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error getting location: $e');
+    }
   }
 
   Future<void> _saveTripDetails() async {
@@ -407,7 +461,8 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
     await prefs.setString('pickup1_address', _departureController.text);
     await prefs.setString('trip1_duration', _durationNotifier.value.toString());
     if (_dateTimeNotifier.value != null) {
-      await prefs.setString('trip1_datetime', _dateTimeNotifier.value!.toIso8601String());
+      await prefs.setString(
+          'trip1_datetime', _dateTimeNotifier.value!.toIso8601String());
     }
   }
 
@@ -521,7 +576,8 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
       builder: (context, currentStep, _) {
         final hasLocation = _departureController.text.isNotEmpty;
         final hasDateTime = _dateTimeNotifier.value != null;
-        final progress = hasLocation && hasDateTime ? 1.0 : (hasLocation ? 0.5 : 0.0);
+        final progress =
+            hasLocation && hasDateTime ? 1.0 : (hasLocation ? 0.5 : 0.0);
 
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -537,8 +593,9 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
                     return LinearProgressIndicator(
                       value: value,
                       minHeight: 6,
-                      backgroundColor: AppTheme.slate.withOpacity(0.3),
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryGold),
+                      backgroundColor: AppTheme.slate.withValues(alpha: 0.3),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppTheme.primaryGold),
                     );
                   },
                 ),
@@ -560,15 +617,14 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
   }
 
   Widget _buildStepLabel(int step, String label, bool isComplete) {
-    return Opacity(
-      opacity: isComplete ? 1.0 : 0.4,
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isComplete ? AppTheme.primaryGold : AppTheme.offWhite,
-          fontSize: 12,
-          fontWeight: isComplete ? FontWeight.w600 : FontWeight.w400,
-        ),
+    return Text(
+      label,
+      style: TextStyle(
+        color: isComplete
+            ? AppTheme.primaryGold
+            : AppTheme.offWhite.withValues(alpha: 0.4),
+        fontSize: 12,
+        fontWeight: isComplete ? FontWeight.w600 : FontWeight.w400,
       ),
     );
   }
@@ -590,11 +646,11 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
             decoration: InputDecoration(
               hintText: 'Enter your location...',
               hintStyle: TextStyle(
-                color: AppTheme.offWhite.withOpacity(0.5),
+                color: AppTheme.offWhite.withValues(alpha: 0.5),
                 fontSize: 16,
               ),
               filled: true,
-              fillColor: AppTheme.deepCharcoal.withOpacity(0.5),
+              fillColor: AppTheme.deepCharcoal.withValues(alpha: 0.5),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
@@ -627,7 +683,7 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
                   color: AppTheme.deepCharcoal,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: AppTheme.primaryGold.withOpacity(0.2),
+                    color: AppTheme.primaryGold.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -637,7 +693,7 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
                   physics: const BouncingScrollPhysics(),
                   itemCount: suggestions.length,
                   separatorBuilder: (context, index) => Divider(
-                    color: AppTheme.primaryGold.withOpacity(0.1),
+                    color: AppTheme.primaryGold.withValues(alpha: 0.1),
                     height: 1,
                   ),
                   itemBuilder: (context, index) {
@@ -689,7 +745,7 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGold.withOpacity(0.15),
+                  color: AppTheme.primaryGold.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
@@ -759,12 +815,12 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppTheme.deepCharcoal.withOpacity(0.5),
+                color: AppTheme.deepCharcoal.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: selectedDateTime != null
                       ? AppTheme.primaryGold
-                      : AppTheme.primaryGold.withOpacity(0.3),
+                      : AppTheme.primaryGold.withValues(alpha: 0.3),
                   width: 2,
                 ),
               ),
@@ -775,8 +831,8 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          AppTheme.primaryGold.withOpacity(0.3),
-                          AppTheme.primaryGold.withOpacity(0.2),
+                          AppTheme.primaryGold.withValues(alpha: 0.3),
+                          AppTheme.primaryGold.withValues(alpha: 0.2),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(12),
@@ -797,7 +853,7 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
                               ? 'Select date and time'
                               : 'Scheduled',
                           style: TextStyle(
-                            color: AppTheme.offWhite.withOpacity(0.7),
+                            color: AppTheme.offWhite.withValues(alpha: 0.7),
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
@@ -807,7 +863,7 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
                           selectedDateTime == null
                               ? 'Tap to choose'
                               : '${selectedDateTime.day}/${selectedDateTime.month}/${selectedDateTime.year} • '
-                              '${selectedDateTime.hour.toString().padLeft(2, '0')}:${selectedDateTime.minute.toString().padLeft(2, '0')}',
+                                  '${selectedDateTime.hour.toString().padLeft(2, '0')}:${selectedDateTime.minute.toString().padLeft(2, '0')}',
                           style: const TextStyle(
                             color: AppTheme.softWhite,
                             fontSize: 17,
@@ -823,7 +879,7 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
                         : Icons.arrow_forward_ios_rounded,
                     color: selectedDateTime != null
                         ? AppTheme.primaryGold
-                        : AppTheme.offWhite.withOpacity(0.5),
+                        : AppTheme.offWhite.withValues(alpha: 0.5),
                     size: 24,
                   ),
                 ],
@@ -852,7 +908,9 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
             surface: AppTheme.charcoal,
             onSurface: AppTheme.softWhite,
           ),
-          dialogBackgroundColor: AppTheme.charcoal,
+          dialogTheme: const DialogThemeData(
+            backgroundColor: AppTheme.charcoal,
+          ),
         ),
         child: child!,
       ),
@@ -870,7 +928,9 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
               surface: AppTheme.charcoal,
               onSurface: AppTheme.softWhite,
             ),
-            dialogBackgroundColor: AppTheme.charcoal,
+            dialogTheme: const DialogThemeData(
+              backgroundColor: AppTheme.charcoal,
+            ),
           ),
           child: child!,
         ),
@@ -905,12 +965,12 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: AppTheme.primaryGold.withOpacity(0.4),
+                  color: AppTheme.primaryGold.withValues(alpha: 0.4),
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryGold.withOpacity(0.3),
+                    color: AppTheme.primaryGold.withValues(alpha: 0.3),
                     blurRadius: 24,
                     offset: const Offset(0, 12),
                   ),
@@ -935,9 +995,10 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
                       ),
                     ),
                   },
-                  onMapCreated: (GoogleMapController controller) {
+                  onMapCreated: (controller) {
                     _mapController = controller;
                   },
+                  style: luxuryMapStyle,
                   myLocationButtonEnabled: false,
                   zoomControlsEnabled: false,
                   mapToolbarEnabled: false,
@@ -957,7 +1018,7 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
         gradient: LinearGradient(
           colors: [
             Colors.transparent,
-            AppTheme.richBlack.withOpacity(0.5),
+            AppTheme.richBlack.withValues(alpha: 0.5),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -980,24 +1041,24 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
                 borderRadius: BorderRadius.circular(20),
                 gradient: canProceed
                     ? const LinearGradient(
-                  colors: [AppTheme.primaryGold, AppTheme.accentGold],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                )
+                        colors: [AppTheme.primaryGold, AppTheme.accentGold],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      )
                     : LinearGradient(
-                  colors: [
-                    AppTheme.slate.withOpacity(0.3),
-                    AppTheme.slate.withOpacity(0.2),
-                  ],
-                ),
+                        colors: [
+                          AppTheme.slate.withValues(alpha: 0.3),
+                          AppTheme.slate.withValues(alpha: 0.2),
+                        ],
+                      ),
                 boxShadow: canProceed
                     ? [
-                  BoxShadow(
-                    color: AppTheme.primaryGold.withOpacity(0.5),
-                    blurRadius: 28,
-                    offset: const Offset(0, 14),
-                  ),
-                ]
+                        BoxShadow(
+                          color: AppTheme.primaryGold.withValues(alpha: 0.5),
+                          blurRadius: 28,
+                          offset: const Offset(0, 14),
+                        ),
+                      ]
                     : null,
               ),
               child: Material(
@@ -1015,7 +1076,7 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
                               : Icons.lock_outline_rounded,
                           color: canProceed
                               ? AppTheme.richBlack
-                              : AppTheme.offWhite.withOpacity(0.3),
+                              : AppTheme.offWhite.withValues(alpha: 0.3),
                           size: 28,
                         ),
                         const SizedBox(width: 12),
@@ -1028,7 +1089,7 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
                             fontWeight: FontWeight.bold,
                             color: canProceed
                                 ? AppTheme.richBlack
-                                : AppTheme.offWhite.withOpacity(0.3),
+                                : AppTheme.offWhite.withValues(alpha: 0.3),
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -1063,20 +1124,20 @@ class _LuxuryCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.charcoal.withOpacity(0.6),
-            AppTheme.deepCharcoal.withOpacity(0.4),
+            AppTheme.charcoal.withValues(alpha: 0.6),
+            AppTheme.deepCharcoal.withValues(alpha: 0.4),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: AppTheme.primaryGold.withOpacity(0.2),
+          color: AppTheme.primaryGold.withValues(alpha: 0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -1093,8 +1154,8 @@ class _LuxuryCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryGold.withOpacity(0.3),
-                      AppTheme.primaryGold.withOpacity(0.1),
+                      AppTheme.primaryGold.withValues(alpha: 0.3),
+                      AppTheme.primaryGold.withValues(alpha: 0.1),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
@@ -1151,25 +1212,26 @@ class _DurationChip extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: isSelected
               ? const LinearGradient(
-            colors: [AppTheme.primaryGold, AppTheme.accentGold],
-          )
+                  colors: [AppTheme.primaryGold, AppTheme.accentGold],
+                )
               : null,
-          color: isSelected ? null : AppTheme.deepCharcoal.withOpacity(0.5),
+          color:
+              isSelected ? null : AppTheme.deepCharcoal.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
                 ? AppTheme.primaryGold
-                : AppTheme.primaryGold.withOpacity(0.2),
+                : AppTheme.primaryGold.withValues(alpha: 0.2),
             width: 2,
           ),
           boxShadow: isSelected
               ? [
-            BoxShadow(
-              color: AppTheme.primaryGold.withOpacity(0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ]
+                  BoxShadow(
+                    color: AppTheme.primaryGold.withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
               : null,
         ),
         child: Text(
