@@ -219,6 +219,8 @@ class QuickServicePageState extends State<QuickServicePage>
         _isSuccessNotifier.value = true;
         HapticFeedback.heavyImpact();
       } else {
+        debugPrint(
+            'Quick trip error response: ${response.statusCode} - ${response.body}');
         if (mounted) _showErrorSnackbar(Strings.of(context).tripRequestError);
       }
     } catch (e) {

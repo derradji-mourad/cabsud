@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -83,20 +84,27 @@ class _LoginScreenState extends State<LoginScreen>
     _loadingNotifier.value = true;
 
     try {
-      final response = await _supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      debugPrint('Attempting login...');
+      final response = await _supabase.auth
+          .signInWithPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          )
+          .timeout(const Duration(seconds: 15));
 
       final session = response.session;
       final user = response.user;
 
       if (session != null && user != null) {
+        debugPrint('Login successful, checking user role...');
         final userData = await _supabase
             .from('users')
             .select('id, role')
             .eq('id', user.id)
-            .single();
+            .single()
+            .timeout(const Duration(seconds: 10));
+
+        debugPrint('User data: $userData');
 
         if (userData['role'] != 'user') {
           throw Exception('Invalid account type');
@@ -112,7 +120,15 @@ class _LoginScreenState extends State<LoginScreen>
 
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        debugPrint('Login returned null session or user');
+        if (!mounted) return;
+        _showErrorSnackBar(Strings.of(context).loginFailed);
       }
+    } on TimeoutException {
+      debugPrint('Login timed out');
+      if (!mounted) return;
+      _showErrorSnackBar('Connection timed out. Please try again.');
     } catch (error) {
       debugPrint('Login error: $error');
       if (!mounted) return;
