@@ -98,51 +98,54 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildLoadingScreen() {
     return Center(
       key: const ValueKey('loading'),
-      child: AnimatedBuilder(
-        animation: _pulseController,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: 0.95 + (_pulseController.value * 0.05),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        AppTheme.primaryGold.withValues(alpha: 0.4),
-                        AppTheme.primaryGold.withValues(alpha: 0.1),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.directions_car_rounded,
-                    size: 50,
-                    color: AppTheme.primaryGold,
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _pulseController,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: 0.95 + (_pulseController.value * 0.05),
+              child: child,
+            );
+          },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppTheme.primaryGold.withValues(alpha: 0.4),
+                      AppTheme.primaryGold.withValues(alpha: 0.1),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
-                const SizedBox(height: 32),
-                ShaderMask(
-                  shaderCallback: (bounds) =>
-                      AppTheme.primaryGoldGradient.createShader(bounds),
-                  child: const Text(
-                    'CABSUD',
-                    style: TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 6,
-                      color: Colors.white,
-                    ),
+                child: const Icon(
+                  Icons.directions_car_rounded,
+                  size: 50,
+                  color: AppTheme.primaryGold,
+                ),
+              ),
+              const SizedBox(height: 32),
+              ShaderMask(
+                shaderCallback: (bounds) =>
+                    AppTheme.primaryGoldGradient.createShader(bounds),
+                child: const Text(
+                  'CABSUD',
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 6,
+                    color: Colors.white,
                   ),
                 ),
-              ],
-            ),
-          );
-        },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -167,13 +170,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         boxShadow: [
           BoxShadow(
             color: AppTheme.primaryGold.withValues(alpha: 0.1),
-            blurRadius: 20,
+            blurRadius: 12,
             offset: const Offset(0, 5),
             spreadRadius: 2,
           ),
           BoxShadow(
             color: AppTheme.richBlack.withValues(alpha: 0.8),
-            blurRadius: 30,
+            blurRadius: 16,
             offset: const Offset(0, 15),
             spreadRadius: 5,
           ),
@@ -357,9 +360,11 @@ class _ModernCarouselHomeState extends State<ModernCarouselHome>
                         ),
                       );
                     },
-                    child: Carousel3DCard(
-                      service: services[index],
-                      isActive: _currentPage == index,
+                    child: RepaintBoundary(
+                      child: Carousel3DCard(
+                        service: services[index],
+                        isActive: _currentPage == index,
+                      ),
                     ),
                   );
                 },
@@ -417,7 +422,7 @@ class _ModernCarouselHomeState extends State<ModernCarouselHome>
                   boxShadow: [
                     BoxShadow(
                       color: AppTheme.primaryGold.withValues(alpha: 0.4),
-                      blurRadius: 15,
+                      blurRadius: 10,
                       offset: const Offset(0, 6),
                     ),
                   ],
@@ -563,13 +568,13 @@ class _Carousel3DCardState extends State<Carousel3DCard>
             boxShadow: [
               BoxShadow(
                 color: widget.service.color.withValues(alpha: 0.2),
-                blurRadius: 30,
+                blurRadius: 16,
                 offset: const Offset(0, 20),
                 spreadRadius: -5,
               ),
               BoxShadow(
                 color: AppTheme.richBlack.withValues(alpha: 0.5),
-                blurRadius: 40,
+                blurRadius: 20,
                 offset: const Offset(0, 30),
                 spreadRadius: -10,
               ),
@@ -604,31 +609,34 @@ class _Carousel3DCardState extends State<Carousel3DCard>
 
                 // Animated shimmer (only if active)
                 if (widget.isActive)
-                  AnimatedBuilder(
-                    animation: _shimmerController,
-                    builder: (context, child) {
-                      return Transform.translate(
-                        offset: Offset(
-                          -300 + (_shimmerController.value * 900),
-                          0,
-                        ),
-                        child: Transform.rotate(
-                          angle: 0.4, // Tilt shimmer
-                          child: Container(
-                            width: 100,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.transparent,
-                                  Colors.white.withValues(alpha: 0.1),
-                                  Colors.transparent,
-                                ],
-                              ),
+                  RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _shimmerController,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(
+                            -300 + (_shimmerController.value * 900),
+                            0,
+                          ),
+                          child: child,
+                        );
+                      },
+                      child: Transform.rotate(
+                        angle: 0.4, // Tilt shimmer
+                        child: Container(
+                          width: 100,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                Colors.white.withValues(alpha: 0.1),
+                                Colors.transparent,
+                              ],
                             ),
                           ),
                         ),
-                      );
-                    },
+                      ),
+                    ),
                   ),
 
                 // Content
@@ -648,7 +656,7 @@ class _Carousel3DCardState extends State<Carousel3DCard>
                             BoxShadow(
                               color:
                                   widget.service.color.withValues(alpha: 0.4),
-                              blurRadius: 20,
+                              blurRadius: 12,
                               offset: const Offset(0, 8),
                             ),
                           ],
@@ -717,7 +725,7 @@ class _Carousel3DCardState extends State<Carousel3DCard>
                               BoxShadow(
                                 color:
                                     widget.service.color.withValues(alpha: 0.4),
-                                blurRadius: 15,
+                                blurRadius: 10,
                                 offset: const Offset(0, 8),
                               ),
                             ],

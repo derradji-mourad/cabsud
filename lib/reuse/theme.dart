@@ -255,7 +255,7 @@ class AppTheme {
       boxShadow: [
         BoxShadow(
           color: primaryGold.withValues(alpha: 0.1),
-          blurRadius: 20,
+          blurRadius: 12,
           offset: const Offset(0, 10),
         ),
       ],
