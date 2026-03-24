@@ -1,0 +1,8 @@
+flutter_native_splash:
+  color: "#000000"                # Background color for the splash screen
+  image: assets/logo/logo5.png          # Path to your logo asset
+  android: true                   # Enable for Android
+  ios: true                       # Enable for iOS
+  android_gravity: center         # Position logo in the center
+  ios_content_mode: scaleAspectFit # Scale logo to fit on iOS
+  fullscreen: true
