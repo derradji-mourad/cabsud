@@ -166,22 +166,22 @@ class _CommandePageState extends State<CommandePage>
                     ),
                     physics: const BouncingScrollPhysics(),
                     children: [
-                      _buildWelcomeHeader(),
+                      const _WelcomeHeader(),
                       const SizedBox(height: AppTheme.spaceXL),
-                      _buildSectionHeader(
-                          'Personal Information', Icons.person_outline),
+                      const _SectionHeader(
+                          title: 'Personal Information', icon: Icons.person_outline),
                       _buildPersonalInfoSection(),
                       const SizedBox(height: AppTheme.spaceXL),
-                      _buildSectionHeader(
-                          'Address Details', Icons.location_on_outlined),
+                      const _SectionHeader(
+                          title: 'Address Details', icon: Icons.location_on_outlined),
                       _buildAddressSection(),
                       const SizedBox(height: AppTheme.spaceXL),
-                      _buildSectionHeader(
-                          'Trip Information', Icons.flight_outlined),
+                      const _SectionHeader(
+                          title: 'Trip Information', icon: Icons.flight_outlined),
                       _buildTripInfoSection(),
                       const SizedBox(height: AppTheme.spaceXL),
-                      _buildSectionHeader(
-                          'Payment Method', Icons.payment_outlined),
+                      const _SectionHeader(
+                          title: 'Payment Method', icon: Icons.payment_outlined),
                       _buildPaymentSection(),
                       const SizedBox(height: AppTheme.spaceXL * 2),
                       _buildSubmitButton(),
@@ -249,151 +249,6 @@ class _CommandePageState extends State<CommandePage>
     );
   }
 
-  Widget _buildWelcomeHeader() {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primaryGold.withValues(alpha: 0.15),
-            AppTheme.accentGold.withValues(alpha: 0.08),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.primaryGold.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primaryGold.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.primaryGold, AppTheme.accentGold],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryGold.withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.stars_rounded,
-                  color: AppTheme.richBlack,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Premium Experience',
-                      style: TextStyle(
-                        color: AppTheme.softWhite,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Complete your details for a luxury journey',
-                      style: TextStyle(
-                        color: AppTheme.offWhite,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppTheme.primaryGold, AppTheme.accentGold],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryGold.withValues(alpha: 0.35),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Icon(
-              icon,
-              color: AppTheme.richBlack,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: AppTheme.spaceM),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.softWhite,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  height: 2,
-                  width: 40,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppTheme.primaryGold, Colors.transparent],
-                    ),
-                    borderRadius: BorderRadius.circular(1),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPersonalInfoSection() {
     return Column(
@@ -695,6 +550,168 @@ class _CommandePageState extends State<CommandePage>
                   ],
                 ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  EXTRACTED WIDGETS
+// ─────────────────────────────────────────────────────────────
+
+class _WelcomeHeader extends StatelessWidget {
+  const _WelcomeHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceL),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.primaryGold.withValues(alpha: 0.15),
+            AppTheme.accentGold.withValues(alpha: 0.08),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppTheme.primaryGold.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryGold.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.primaryGold, AppTheme.accentGold],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryGold.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.stars_rounded,
+                  color: AppTheme.richBlack,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Premium Experience',
+                      style: TextStyle(
+                        color: AppTheme.softWhite,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Complete your details for a luxury journey',
+                      style: TextStyle(
+                        color: AppTheme.offWhite,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  const _SectionHeader({required this.title, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppTheme.primaryGold, AppTheme.accentGold],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryGold.withValues(alpha: 0.35),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(
+              icon,
+              color: AppTheme.richBlack,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spaceM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.softWhite,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  height: 2,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppTheme.primaryGold, Colors.transparent],
+                    ),
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -277,9 +277,10 @@ $message
               child: CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
-                  // Header
-                  SliverToBoxAdapter(child: _buildHeader()),
-
+                  SliverToBoxAdapter(child: _ContactHeader(
+                    title: Strings.of(context).contactTitle,
+                    subtitle: Strings.of(context).contactSubtitle,
+                  )),
                   // Form
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -348,7 +349,11 @@ $message
                                       : null,
                             ),
                             const SizedBox(height: 32),
-                            _buildSubmitButton(),
+                            _SubmitButton(
+                              isSending: _isSending,
+                              onSend: _sendEmail,
+                              buttonText: Strings.of(context).submitButton,
+                            ),
                             const SizedBox(height: 40),
                           ],
                         ),
@@ -364,69 +369,6 @@ $message
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-      child: Column(
-        children: [
-          // Icon
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppTheme.primaryGold, AppTheme.accentGold],
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryGold.withValues(alpha: 0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.mail_rounded,
-              size: 40,
-              color: AppTheme.richBlack,
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Title
-          ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [AppTheme.lightGold, AppTheme.primaryGold],
-            ).createShader(bounds),
-            child: Text(
-              Strings.of(context).contactTitle,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: 1,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Subtitle
-          Text(
-            Strings.of(context).contactSubtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: AppTheme.offWhite.withValues(alpha: 0.7),
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildLuxuryField({
     required TextEditingController controller,
@@ -521,7 +463,88 @@ $message
     );
   }
 
-  Widget _buildSubmitButton() {
+}
+
+// ─────────────────────────────────────────────────────────────
+//  EXTRACTED WIDGETS
+// ─────────────────────────────────────────────────────────────
+
+class _ContactHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  const _ContactHeader({required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppTheme.primaryGold, AppTheme.accentGold],
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryGold.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.mail_rounded,
+              size: 40,
+              color: AppTheme.richBlack,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [AppTheme.lightGold, AppTheme.primaryGold],
+            ).createShader(bounds),
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              color: AppTheme.offWhite.withValues(alpha: 0.7),
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SubmitButton extends StatelessWidget {
+  final bool isSending;
+  final VoidCallback onSend;
+  final String buttonText;
+  const _SubmitButton({
+    required this.isSending,
+    required this.onSend,
+    required this.buttonText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
       duration: const Duration(milliseconds: 1000),
       tween: Tween(begin: 0.0, end: 1.0),
@@ -553,10 +576,10 @@ $message
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: _isSending ? null : _sendEmail,
+            onTap: isSending ? null : onSend,
             borderRadius: BorderRadius.circular(20),
             child: Center(
-              child: _isSending
+              child: isSending
                   ? const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -592,7 +615,7 @@ $message
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          Strings.of(context).submitButton.toUpperCase(),
+                          buttonText.toUpperCase(),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

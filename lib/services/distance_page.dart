@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:cabsudapp/reuse/isolate_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -188,18 +189,13 @@ class DistanceCalculatorState extends State<DistanceCalculator>
 
       final response = await http.get(url);
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == 'OK') {
-          final suggestions = (data['predictions'] as List)
-              .map<String>((item) => item['description'].toString())
-              .toList();
+        final suggestions = await parseAddressSuggestions(response.body);
 
-          if (mounted) {
-            if (isPickup) {
-              _pickupSuggestionsNotifier.value = suggestions;
-            } else {
-              _destinationSuggestionsNotifier.value = suggestions;
-            }
+        if (mounted) {
+          if (isPickup) {
+            _pickupSuggestionsNotifier.value = suggestions;
+          } else {
+            _destinationSuggestionsNotifier.value = suggestions;
           }
         }
       }
@@ -410,7 +406,7 @@ class DistanceCalculatorState extends State<DistanceCalculator>
 
     final response = await http.get(url);
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      final data = await parseJsonMap(response.body);
       if (data['status'] == 'OK') {
         final location = data['results'][0]['geometry']['location'];
         return {'lat': location['lat'], 'lon': location['lng']};
@@ -951,8 +947,9 @@ class DistanceCalculatorState extends State<DistanceCalculator>
   }
 
   Widget _buildMapView() {
+    final mapHeight = (MediaQuery.of(context).size.height * 0.3).clamp(180.0, 300.0);
     return Container(
-      height: 280,
+      height: mapHeight,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         border: Border.all(

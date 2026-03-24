@@ -10,7 +10,34 @@ import 'package:cabsudapp/localization/string.dart';
 import 'package:cabsudapp/services/services_type_page.dart';
 import 'package:cabsudapp/services/quick_service_page.dart';
 
-/// Modern carousel-based home page with 3D card effects
+// ─────────────────────────────────────────────────────────────
+//  DATA MODEL
+// ─────────────────────────────────────────────────────────────
+
+class ServiceData {
+  final String title;
+  final String subtitle;
+  final String description;
+  final String imagePath;
+  final IconData icon;
+  final Color color;
+  final Widget destination;
+
+  const ServiceData({
+    required this.title,
+    required this.subtitle,
+    required this.description,
+    required this.imagePath,
+    required this.icon,
+    required this.color,
+    required this.destination,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  HOME PAGE (root)
+// ─────────────────────────────────────────────────────────────
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -26,7 +53,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    // Pulse animation for the loading screen
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
@@ -52,6 +78,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
     Strings.load(selectedLanguage);
     if (mounted) {
+      _pulseController.stop();
       setState(() => _isLanguageLoaded = true);
     }
   }
@@ -68,12 +95,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    // FIX 1: extendBody: true allows the body gradient to flow behind the bottom nav bar
     return Scaffold(
       extendBody: true,
       body: Container(
         decoration: AppTheme.luxuryBackgroundGradient,
-        // FIX 2: AnimatedSwitcher prevents the harsh "reloading" flash when language loads
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 800),
           switchInCurve: Curves.easeInOutCubic,
@@ -88,80 +113,109 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     SettingsPage(),
                   ],
                 )
-              : _buildLoadingScreen(),
+              : _LoadingScreen(
+                  key: const ValueKey('loading'),
+                  pulseController: _pulseController,
+                ),
         ),
       ),
-      bottomNavigationBar: _buildMinimalNavBar(),
+      bottomNavigationBar: RepaintBoundary(
+        child: _MinimalNavBar(
+          currentIndex: _currentIndex,
+          onIndexChanged: (i) => setState(() => _currentIndex = i),
+        ),
+      ),
     );
   }
+}
 
-  Widget _buildLoadingScreen() {
+// ─────────────────────────────────────────────────────────────
+//  LOADING SCREEN (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _LoadingScreen extends StatelessWidget {
+  final AnimationController pulseController;
+
+  const _LoadingScreen({super.key, required this.pulseController});
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
-      key: const ValueKey('loading'),
-      child: RepaintBoundary(
-        child: AnimatedBuilder(
-          animation: _pulseController,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: 0.95 + (_pulseController.value * 0.05),
-              child: child,
-            );
-          },
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppTheme.primaryGold.withValues(alpha: 0.4),
-                      AppTheme.primaryGold.withValues(alpha: 0.1),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-                child: const Icon(
-                  Icons.directions_car_rounded,
-                  size: 50,
-                  color: AppTheme.primaryGold,
+      child: AnimatedBuilder(
+        animation: pulseController,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: 0.95 + (pulseController.value * 0.05),
+            child: child,
+          );
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppTheme.primaryGold.withValues(alpha: 0.4),
+                    AppTheme.primaryGold.withValues(alpha: 0.1),
+                    Colors.transparent,
+                  ],
                 ),
               ),
-              const SizedBox(height: 32),
-              ShaderMask(
-                shaderCallback: (bounds) =>
-                    AppTheme.primaryGoldGradient.createShader(bounds),
-                child: const Text(
-                  'CABSUD',
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 6,
-                    color: Colors.white,
-                  ),
+              child: const Icon(
+                Icons.directions_car_rounded,
+                size: 50,
+                color: AppTheme.primaryGold,
+              ),
+            ),
+            const SizedBox(height: 32),
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [AppTheme.lightGold, AppTheme.primaryGold],
+              ).createShader(bounds),
+              child: const Text(
+                'CABSUD',
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 6,
+                  color: Colors.white,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildMinimalNavBar() {
-    // FIX 3: Dynamic bottom padding accounts for iPhone Home Indicator
-    // This lifts the nav bar up so it doesn't get cut off or sit too low
+// ─────────────────────────────────────────────────────────────
+//  MINIMAL NAV BAR (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _MinimalNavBar extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onIndexChanged;
+
+  const _MinimalNavBar({
+    required this.currentIndex,
+    required this.onIndexChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final strings = Strings.of(context);
 
     return Container(
-      // Add bottomPadding to the margin to make it "float" correctly
       margin: EdgeInsets.fromLTRB(20, 0, 20, 20 + bottomPadding),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.card
-            .withValues(alpha: 0.95), // Deep blue luxury background
+        color: AppTheme.card.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
           color: AppTheme.primaryGold.withValues(alpha: 0.3),
@@ -170,13 +224,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         boxShadow: [
           BoxShadow(
             color: AppTheme.primaryGold.withValues(alpha: 0.1),
-            blurRadius: 12,
+            blurRadius: 20,
             offset: const Offset(0, 5),
             spreadRadius: 2,
           ),
           BoxShadow(
             color: AppTheme.richBlack.withValues(alpha: 0.8),
-            blurRadius: 16,
+            blurRadius: 30,
             offset: const Offset(0, 15),
             spreadRadius: 5,
           ),
@@ -185,22 +239,53 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(Icons.home_rounded, 0, Strings.of(context).accueil),
-          _buildNavItem(Icons.phone_rounded, 1, Strings.of(context).contact1),
-          _buildNavItem(
-              Icons.settings_rounded, 2, Strings.of(context).parametres),
+          _NavItem(
+            icon: Icons.home_rounded,
+            label: strings.accueil,
+            isActive: currentIndex == 0,
+            onTap: () => onIndexChanged(0),
+          ),
+          _NavItem(
+            icon: Icons.phone_rounded,
+            label: strings.contact1,
+            isActive: currentIndex == 1,
+            onTap: () => onIndexChanged(1),
+          ),
+          _NavItem(
+            icon: Icons.settings_rounded,
+            label: strings.parametres,
+            isActive: currentIndex == 2,
+            onTap: () => onIndexChanged(2),
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildNavItem(IconData icon, int index, String label) {
-    final isActive = _currentIndex == index;
+// ─────────────────────────────────────────────────────────────
+//  NAV ITEM (extracted widget)
+// ─────────────────────────────────────────────────────────────
 
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        setState(() => _currentIndex = index);
+        onTap();
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
@@ -214,6 +299,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
@@ -222,12 +308,16 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
             if (isActive) ...[
               const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: AppTheme.richBlack,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
+              Flexible(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: AppTheme.richBlack,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],
@@ -238,7 +328,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 }
 
-/// Modern carousel home with 3D card effects
+// ─────────────────────────────────────────────────────────────
+//  MODERN CAROUSEL HOME
+// ─────────────────────────────────────────────────────────────
+
 class ModernCarouselHome extends StatefulWidget {
   const ModernCarouselHome({super.key});
 
@@ -257,10 +350,9 @@ class _ModernCarouselHomeState extends State<ModernCarouselHome>
     super.initState();
     _fadeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200), // Slower, smoother entry
+      duration: const Duration(milliseconds: 1200),
     )..forward();
 
-    // Listener purely for the index indicator state
     _pageController.addListener(() {
       final page = _pageController.page ?? 0;
       final newIndex = page.round();
@@ -277,18 +369,13 @@ class _ModernCarouselHomeState extends State<ModernCarouselHome>
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final strings = Strings.of(context);
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    final services = [
+  List<ServiceData> _buildServices(Strings strings) {
+    return [
       ServiceData(
         title: strings.quickServiceTitle,
         subtitle: strings.quickServiceSubtitle,
         description: 'Book a ride in seconds',
-        imagePath:
-            'assets/intro/mise_a_disposition.jpg', // Reusing existing asset for now
+        imagePath: 'assets/intro/mise_a_disposition.jpg',
         icon: Icons.flash_on_rounded,
         color: AppTheme.luxuryGold,
         destination: const QuickServicePage(),
@@ -321,6 +408,11 @@ class _ModernCarouselHomeState extends State<ModernCarouselHome>
         destination: const ServicesPage(),
       ),
     ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final services = _buildServices(Strings.of(context));
 
     return SafeArea(
       child: FadeTransition(
@@ -328,119 +420,140 @@ class _ModernCarouselHomeState extends State<ModernCarouselHome>
           parent: _fadeController,
           curve: Curves.easeOut,
         ),
-        child: Column(
-          children: [
-            _buildModernHeader(),
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: services.length,
-                onPageChanged: (index) {
-                  HapticFeedback.selectionClick();
-                },
-                itemBuilder: (context, index) {
-                  // FIX 4: Use AnimatedBuilder to isolate the carousel animation
-                  // from the parent rebuilds. This makes scrolling much smoother.
-                  return AnimatedBuilder(
-                    animation: _pageController,
-                    builder: (context, child) {
-                      double value = 1.0;
-                      if (_pageController.position.haveDimensions) {
-                        value = (_pageController.page ?? 0) - index;
-                        // Use a smoother curve (easeOut) rather than linear
-                        value = (1 - (value.abs() * 0.3)).clamp(0.0, 1.0);
-                        value =
-                            Curves.easeOut.transform(value).clamp(0.75, 1.0);
-                      }
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final availableHeight = constraints.maxHeight;
+            final cardHeightFactor = availableHeight > 600 ? 0.60 : 0.55;
 
-                      return Center(
-                        child: SizedBox(
-                          height: screenHeight * 0.65 * value,
-                          child: child,
+            return Column(
+              children: [
+                const _ModernHeader(),
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: services.length,
+                    onPageChanged: (_) => HapticFeedback.selectionClick(),
+                    itemBuilder: (context, index) {
+                      return AnimatedBuilder(
+                        animation: _pageController,
+                        builder: (context, child) {
+                          double value = 1.0;
+                          if (_pageController.position.haveDimensions) {
+                            value = (_pageController.page ?? 0) - index;
+                            value = (1 - (value.abs() * 0.3)).clamp(0.0, 1.0);
+                            value =
+                                Curves.easeOut.transform(value).clamp(0.75, 1.0);
+                          }
+                          return Center(
+                            child: SizedBox(
+                              height: availableHeight * cardHeightFactor * value,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Carousel3DCard(
+                          service: services[index],
+                          isActive: _currentPage == index,
                         ),
                       );
                     },
-                    child: RepaintBoundary(
-                      child: Carousel3DCard(
-                        service: services[index],
-                        isActive: _currentPage == index,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            _buildPageIndicator(services.length),
-            const SizedBox(height: 100),
-          ],
+                  ),
+                ),
+                _PageIndicator(
+                  length: services.length,
+                  currentPage: _currentPage,
+                ),
+                const SizedBox(height: 70),
+              ],
+            );
+          },
         ),
       ),
     );
   }
+}
 
-  Widget _buildModernHeader() {
+// ─────────────────────────────────────────────────────────────
+//  MODERN HEADER (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _ModernHeader extends StatelessWidget {
+  const _ModernHeader();
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ShaderMask(
-                    shaderCallback: (bounds) =>
-                        AppTheme.primaryGoldGradient.createShader(bounds),
-                    child: const Text(
-                      'CABSUD',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 3,
-                        color: Colors.white,
-                      ),
-                    ),
+              ShaderMask(
+                shaderCallback: (bounds) =>
+                    AppTheme.primaryGoldGradient.createShader(bounds),
+                child: const Text(
+                  'CABSUD',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 3,
+                    color: Colors.white,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Choose Your Journey',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.offWhite.withValues(alpha: 0.6),
-                      letterSpacing: 1,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: AppTheme.primaryGoldGradient,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryGold.withValues(alpha: 0.4),
-                      blurRadius: 10,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
                 ),
-                child: const Icon(
-                  Icons.notifications_rounded,
-                  color: AppTheme.richBlack,
-                  size: 24,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Choose Your Journey',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.offWhite.withValues(alpha: 0.6),
+                  letterSpacing: 1,
                 ),
               ),
             ],
+          ),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGoldGradient,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryGold.withValues(alpha: 0.4),
+                  blurRadius: 15,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.notifications_rounded,
+              color: AppTheme.richBlack,
+              size: 24,
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildPageIndicator(int length) {
+// ─────────────────────────────────────────────────────────────
+//  PAGE INDICATOR (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _PageIndicator extends StatelessWidget {
+  final int length;
+  final int currentPage;
+
+  const _PageIndicator({
+    required this.length,
+    required this.currentPage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(
@@ -450,11 +563,11 @@ class _ModernCarouselHomeState extends State<ModernCarouselHome>
           curve: Curves.easeOutCubic,
           margin: const EdgeInsets.symmetric(horizontal: 4),
           height: 8,
-          width: _currentPage == index ? 24 : 8,
+          width: currentPage == index ? 24 : 8,
           decoration: BoxDecoration(
             gradient:
-                _currentPage == index ? AppTheme.primaryGoldGradient : null,
-            color: _currentPage == index
+                currentPage == index ? AppTheme.primaryGoldGradient : null,
+            color: currentPage == index
                 ? null
                 : AppTheme.offWhite.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(4),
@@ -465,27 +578,10 @@ class _ModernCarouselHomeState extends State<ModernCarouselHome>
   }
 }
 
-class ServiceData {
-  final String title;
-  final String subtitle;
-  final String description;
-  final String imagePath;
-  final IconData icon;
-  final Color color;
-  final Widget destination;
+// ─────────────────────────────────────────────────────────────
+//  CAROUSEL 3D CARD (already a separate widget, kept as-is)
+// ─────────────────────────────────────────────────────────────
 
-  ServiceData({
-    required this.title,
-    required this.subtitle,
-    required this.description,
-    required this.imagePath,
-    required this.icon,
-    required this.color,
-    required this.destination,
-  });
-}
-
-/// 3D carousel card with depth effect
 class Carousel3DCard extends StatefulWidget {
   final ServiceData service;
   final bool isActive;
@@ -510,14 +606,56 @@ class _Carousel3DCardState extends State<Carousel3DCard>
     super.initState();
     _shimmerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2500), // Slower shimmer
-    )..repeat();
+      duration: const Duration(milliseconds: 2500),
+    );
+    if (widget.isActive) {
+      _shimmerController.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant Carousel3DCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      _shimmerController.repeat();
+    } else if (!widget.isActive && oldWidget.isActive) {
+      _shimmerController.stop();
+      _shimmerController.reset();
+    }
   }
 
   @override
   void dispose() {
     _shimmerController.dispose();
     super.dispose();
+  }
+
+  void _navigateToService() {
+    HapticFeedback.mediumImpact();
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            widget.service.destination,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+            ),
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.95, end: 1.0).animate(
+                CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                ),
+              ),
+              child: child,
+            ),
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 600),
+      ),
+    );
   }
 
   @override
@@ -529,37 +667,10 @@ class _Carousel3DCardState extends State<Carousel3DCard>
       },
       onTapUp: (_) => setState(() => _isPressed = false),
       onTapCancel: () => setState(() => _isPressed = false),
-      onTap: () {
-        HapticFeedback.mediumImpact();
-        Navigator.of(context).push(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                widget.service.destination,
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              return FadeTransition(
-                opacity: CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOut,
-                ),
-                child: ScaleTransition(
-                  scale: Tween<double>(begin: 0.95, end: 1.0).animate(
-                    CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutCubic,
-                    ),
-                  ),
-                  child: child,
-                ),
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 600),
-          ),
-        );
-      },
+      onTap: _navigateToService,
       child: AnimatedScale(
         scale: _isPressed ? 0.96 : 1.0,
-        curve: Curves.easeOutCubic, // Smoother press animation
+        curve: Curves.easeOutCubic,
         duration: const Duration(milliseconds: 200),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
@@ -568,13 +679,13 @@ class _Carousel3DCardState extends State<Carousel3DCard>
             boxShadow: [
               BoxShadow(
                 color: widget.service.color.withValues(alpha: 0.2),
-                blurRadius: 16,
+                blurRadius: 30,
                 offset: const Offset(0, 20),
                 spreadRadius: -5,
               ),
               BoxShadow(
-                color: AppTheme.richBlack.withValues(alpha: 0.5),
-                blurRadius: 20,
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 40,
                 offset: const Offset(0, 30),
                 spreadRadius: -10,
               ),
@@ -584,6 +695,7 @@ class _Carousel3DCardState extends State<Carousel3DCard>
             borderRadius: BorderRadius.circular(32),
             child: Stack(
               fit: StackFit.expand,
+              clipBehavior: Clip.hardEdge,
               children: [
                 // Background image
                 Image.asset(
@@ -592,172 +704,257 @@ class _Carousel3DCardState extends State<Carousel3DCard>
                 ),
 
                 // Dark overlay
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        AppTheme.richBlack.withValues(alpha: 0.2),
-                        AppTheme.richBlack.withValues(alpha: 0.6),
-                        AppTheme.richBlack.withValues(alpha: 0.9),
-                      ],
-                      stops: const [0.0, 0.5, 1.0],
-                    ),
-                  ),
-                ),
+                const _CardDarkOverlay(),
 
                 // Animated shimmer (only if active)
                 if (widget.isActive)
-                  RepaintBoundary(
-                    child: AnimatedBuilder(
-                      animation: _shimmerController,
-                      builder: (context, child) {
-                        return Transform.translate(
-                          offset: Offset(
-                            -300 + (_shimmerController.value * 900),
-                            0,
-                          ),
-                          child: child,
-                        );
-                      },
-                      child: Transform.rotate(
-                        angle: 0.4, // Tilt shimmer
-                        child: Container(
-                          width: 100,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.transparent,
-                                Colors.white.withValues(alpha: 0.1),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  _CardShimmer(controller: _shimmerController),
 
                 // Content
-                Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Icon
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: AppTheme.primaryGoldGradient,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color:
-                                  widget.service.color.withValues(alpha: 0.4),
-                              blurRadius: 12,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          widget.service.icon,
-                          color: AppTheme.richBlack,
-                          size: 32,
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Subtitle
-                      Text(
-                        widget.service.subtitle.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: widget.service.color,
-                          letterSpacing: 2,
-                        ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Title
-                      Text(
-                        widget.service.title,
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 0.5,
-                          height: 1.2,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Description
-                      Text(
-                        widget.service.description,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.offWhite.withValues(alpha: 0.8),
-                          height: 1.5,
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // CTA Button
-                      if (widget.isActive)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 28,
-                            vertical: 14,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: AppTheme.primaryGoldGradient,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    widget.service.color.withValues(alpha: 0.4),
-                                blurRadius: 10,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'BOOK NOW',
-                                style: TextStyle(
-                                  color: AppTheme.richBlack,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.5,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Icon(
-                                Icons.arrow_forward_rounded,
-                                color: AppTheme.richBlack,
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
+                _CardContent(
+                  service: widget.service,
+                  isActive: widget.isActive,
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CARD DARK OVERLAY (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _CardDarkOverlay extends StatelessWidget {
+  const _CardDarkOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.black.withValues(alpha: 0.2),
+            Colors.black.withValues(alpha: 0.6),
+            Colors.black.withValues(alpha: 0.9),
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CARD SHIMMER (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _CardShimmer extends StatelessWidget {
+  final AnimationController controller;
+
+  const _CardShimmer({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(-300 + (controller.value * 900), 0),
+          child: Transform.rotate(
+            angle: 0.4,
+            child: Container(
+              width: 100,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.transparent,
+                    Colors.white.withValues(alpha: 0.1),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CARD CONTENT (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _CardContent extends StatelessWidget {
+  final ServiceData service;
+  final bool isActive;
+
+  const _CardContent({
+    required this.service,
+    required this.isActive,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: LayoutBuilder(
+        builder: (context, cardConstraints) {
+          final cardH = cardConstraints.maxHeight;
+          final showIcon = cardH > 280;
+          final showDescription = cardH > 240;
+
+          return Padding(
+            padding: EdgeInsets.all(cardH > 300 ? 24 : 16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Spacer(),
+
+                if (showIcon) ...[
+                  _CardIconBadge(color: service.color, icon: service.icon),
+                  const SizedBox(height: 12),
+                ],
+
+                // Subtitle
+                Text(
+                  service.subtitle.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: service.color,
+                    letterSpacing: 2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 4),
+
+                // Title
+                Text(
+                  service.title,
+                  style: TextStyle(
+                    fontSize: cardH > 350 ? 24 : 20,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                    height: 1.2,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                if (showDescription) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    service.description,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.offWhite.withValues(alpha: 0.8),
+                      height: 1.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+
+                const SizedBox(height: 12),
+
+                if (isActive)
+                  _BookNowButton(color: service.color),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CARD ICON BADGE (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _CardIconBadge extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+
+  const _CardIconBadge({required this.color, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.8)],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Icon(icon, color: AppTheme.richBlack, size: 24),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  BOOK NOW BUTTON (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _BookNowButton extends StatelessWidget {
+  final Color color;
+
+  const _BookNowButton({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.8)],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'BOOK NOW',
+            style: TextStyle(
+              color: AppTheme.richBlack,
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
+            ),
+          ),
+          SizedBox(width: 6),
+          Icon(
+            Icons.arrow_forward_rounded,
+            color: AppTheme.richBlack,
+            size: 16,
+          ),
+        ],
       ),
     );
   }

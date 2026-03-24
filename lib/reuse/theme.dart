@@ -2,38 +2,39 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   // New Luxury Palette
-  static const Color background = Color(0xFF0B0F14); // Deep Navy Black
-  static const Color foreground = Color(0xFFFFFFFF); // Primary White
-  static const Color primary = Color(0xFFD4AF37); // Rich Gold
-  static const Color secondary = Color(0xFFE6C76A); // Soft Gold
-  static const Color accent = Color(0xFFB8963E); // Muted Gold
-  static const Color muted = Color(0xFF1A2233); // Soft Dark Gradient tone
-  static const Color card = Color(0xFF11151F); // Dark Card
-  static const Color border = Color(0xFF1C2230); // Slightly elevated surface
-  static const Color luxuryGold = Color(0xFFD4AF37); // Warm bronze gold
+  static const Color background = Color(0xFF010817); // Deep dark blue
+  static const Color foreground = Color(0xFFFFFAEB); // Warm off-white
+  static const Color primary = Color(0xFFFFD700); // Bright gold
+  static const Color secondary = Color(0xFFFFB800); // Deeper gold
+  static const Color accent = Color(0xFFFFD700); // Gold
+  static const Color muted = Color(0xFF1F232E); // Dark muted blue
+  static const Color card = Color(0xFF02091A); // Slightly lighter dark blue
+  static const Color border = Color(0xFF262B3D); // Subtle dark border
+  static const Color luxuryGold = Color(0xFF9E7C3D); // Warm bronze gold
 
   // Mapping to existing names to maintain compatibility while switching logic
   static const Color primaryGold = primary;
-  static const Color lightGold = secondary;
-  static const Color darkGold = accent;
-  static const Color accentGold = primary;
-  static const Color champagneGold = secondary;
+  static const Color lightGold =
+      primary; // Using primary for light gold spots unless specified
+  static const Color darkGold = luxuryGold;
+  static const Color accentGold = secondary;
+  static const Color champagneGold = luxuryGold;
 
   // Black/Dark mappings
   static const Color richBlack = background;
-  static const Color obsidianBlack = Color(0xFF121826);
+  static const Color obsidianBlack = background;
   static const Color charcoal = card;
-  static const Color midnightBlack = Color(0xFF121826);
+  static const Color midnightBlack = muted;
   static const Color deepCharcoal = border;
-  static const Color slate = Color(0xFF1A2233);
-  static const Color graphite = Color(0xFF1A2233);
+  static const Color slate = border;
+  static const Color graphite = muted;
 
   // White mappings
   static const Color pureWhite = foreground;
-  static const Color softWhite = Color(0xFFB0B3B8); // Secondary Text
+  static const Color softWhite = foreground;
   static const Color warmWhite = foreground;
-  static const Color offWhite = Color(0xFFB0B3B8);
-  static const Color warmBeige = secondary;
+  static const Color offWhite = foreground;
+  static const Color warmBeige = luxuryGold;
 
   // Spacing system
   static const double spaceXS = 4.0;
@@ -207,46 +208,49 @@ class AppTheme {
     return darkTheme;
   }
 
-  // Rich Gold Gradient (CTA Button)
+  // Rich Gold Gradient
   static LinearGradient get primaryGoldGradient {
     return const LinearGradient(
       colors: [
-        Color(0xFFE6C76A),
-        Color(0xFFD4AF37),
-        Color(0xFFB8963E),
+        darkGold,
+        primaryGold,
+        accentGold,
+        primaryGold,
       ],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );
   }
 
-  // Luxury gradient background (Main screen)
+  // Luxury gradient background
   static BoxDecoration get luxuryBackgroundGradient {
     return const BoxDecoration(
       gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
         colors: [
-          Color(0xFF0B0F14),
-          Color(0xFF121826),
-          Color(0xFF1A2233),
+          background,
+          card,
+          muted,
+          background,
         ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
+        stops: [0.0, 0.3, 0.7, 1.0],
       ),
     );
   }
 
-  // Premium card with dark background and gold accents (Subtle fade effect)
+  // Premium card with dark background and gold accents
   static BoxDecoration get premiumCardDecoration {
     return BoxDecoration(
       gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
         colors: [
-          Colors.transparent,
-          const Color(0xFF0B0F14).withValues(alpha: 0.8),
+          card,
+          muted,
+          border.withValues(alpha: 0.5),
         ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
       ),
-      color: card,
       borderRadius: BorderRadius.circular(radiusL),
       border: Border.all(
         color: primaryGold.withValues(alpha: 0.2),
@@ -255,7 +259,7 @@ class AppTheme {
       boxShadow: [
         BoxShadow(
           color: primaryGold.withValues(alpha: 0.1),
-          blurRadius: 12,
+          blurRadius: 20,
           offset: const Offset(0, 10),
         ),
       ],

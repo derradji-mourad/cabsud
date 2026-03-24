@@ -295,47 +295,12 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
   }
 
   PreferredSizeWidget _buildLuxuryAppBar() {
-    return AppBar(
-      elevation: 0,
-      centerTitle: true,
-      backgroundColor: Colors.transparent,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, color: AppTheme.primary),
-        onPressed: () {
-          HapticFeedback.lightImpact();
-          Navigator.of(context).pop();
-        },
-      ),
-      title: ShaderMask(
-        shaderCallback: (bounds) => const LinearGradient(
-          colors: [
-            AppTheme.secondary,
-            AppTheme.primary,
-            AppTheme.primary,
-          ],
-        ).createShader(bounds),
-        child: Text(
-          Strings.of(context).vehicleSelectionTitle,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
-          ),
-        ),
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppTheme.background,
-              AppTheme.card.withValues(alpha: 0.95),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-      ),
+    return _LuxuryAppBar(
+      title: Strings.of(context).vehicleSelectionTitle,
+      onBack: () {
+        HapticFeedback.lightImpact();
+        Navigator.of(context).pop();
+      },
     );
   }
 }
@@ -487,8 +452,6 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
 
   @override
   Widget build(BuildContext context) {
-    final strings = Strings.of(context);
-
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -545,7 +508,7 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
                   child: Hero(
                     tag: widget.vehicle.imagePath,
                     child: Container(
-                      height: 160,
+                      height: 140,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Image.asset(
                         widget.vehicle.imagePath,
@@ -553,7 +516,7 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
                         errorBuilder: (context, error, stackTrace) {
                           return Icon(
                             Icons.directions_car_rounded,
-                            size: 80,
+                            size: 60,
                             color: AppTheme.primary.withValues(alpha: 0.3),
                           );
                         },
@@ -565,7 +528,7 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
                 const SizedBox(height: 20),
 
                 // Selected badge
-                if (widget.isSelected) _buildSelectedBadge(),
+                if (widget.isSelected) const _SelectedBadge(),
 
                 const SizedBox(height: 12),
 
@@ -579,6 +542,8 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
                     letterSpacing: 0.5,
                   ),
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
 
                 const SizedBox(height: 8),
@@ -595,17 +560,27 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
                     height: 1.4,
                   ),
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
 
                 const SizedBox(height: 20),
 
                 // Capacity information
-                _buildCapacityRow(strings),
+                _CapacityRow(
+                  isSelected: widget.isSelected,
+                  passengers: widget.vehicle.passengers,
+                  bags: widget.vehicle.bags,
+                ),
 
                 const SizedBox(height: 16),
 
                 // Price information
-                _buildPriceInfo(strings),
+                _PriceInfoRow(
+                  isSelected: widget.isSelected,
+                  isFromDistance: widget.isFromDistance,
+                  vehicle: widget.vehicle,
+                ),
               ],
             ),
           ),
@@ -613,8 +588,74 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
       ),
     );
   }
+}
 
-  Widget _buildSelectedBadge() {
+// ─────────────────────────────────────────────────────────────
+//  LUXURY APP BAR (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _LuxuryAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final VoidCallback onBack;
+
+  const _LuxuryAppBar({required this.title, required this.onBack});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      elevation: 0,
+      centerTitle: true,
+      backgroundColor: Colors.transparent,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, color: AppTheme.primary),
+        onPressed: onBack,
+      ),
+      title: ShaderMask(
+        shaderCallback: (bounds) => const LinearGradient(
+          colors: [
+            AppTheme.secondary,
+            AppTheme.primary,
+            AppTheme.primary,
+          ],
+        ).createShader(bounds),
+        child: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+          ),
+        ),
+      ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.background,
+              AppTheme.card.withValues(alpha: 0.95),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  SELECTED BADGE (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _SelectedBadge extends StatelessWidget {
+  const _SelectedBadge();
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -634,11 +675,7 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
         child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.check_circle_rounded,
-              color: AppTheme.primary,
-              size: 16,
-            ),
+            Icon(Icons.check_circle_rounded, color: AppTheme.primary, size: 16),
             SizedBox(width: 6),
             Text(
               'SÉLECTIONNÉ',
@@ -654,15 +691,34 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
       ),
     );
   }
+}
 
-  Widget _buildCapacityRow(Strings strings) {
+// ─────────────────────────────────────────────────────────────
+//  CAPACITY ROW (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _CapacityRow extends StatelessWidget {
+  final bool isSelected;
+  final int passengers;
+  final int bags;
+
+  const _CapacityRow({
+    required this.isSelected,
+    required this.passengers,
+    required this.bags,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = Strings.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildCapacityItem(
+        _CapacityItem(
           icon: Icons.person_outline_rounded,
           label: strings.vehiclePassengers,
-          value: widget.vehicle.passengers.toString(),
+          value: passengers.toString(),
+          isSelected: isSelected,
         ),
         Container(
           width: 1.5,
@@ -673,7 +729,7 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
               end: Alignment.bottomCenter,
               colors: [
                 Colors.transparent,
-                widget.isSelected
+                isSelected
                     ? AppTheme.primary.withValues(alpha: 0.3)
                     : Colors.white.withValues(alpha: 0.2),
                 Colors.transparent,
@@ -681,32 +737,44 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
             ),
           ),
         ),
-        _buildCapacityItem(
+        _CapacityItem(
           icon: Icons.luggage_outlined,
           label: strings.vehicleBags,
-          value: widget.vehicle.bags.toString(),
+          value: bags.toString(),
+          isSelected: isSelected,
         ),
       ],
     );
   }
+}
 
-  Widget _buildCapacityItem({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
+// ─────────────────────────────────────────────────────────────
+//  CAPACITY ITEM (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _CapacityItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool isSelected;
+
+  const _CapacityItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.isSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(
-          icon,
-          color: widget.isSelected ? AppTheme.primary : AppTheme.primary,
-          size: 28,
-        ),
+        Icon(icon, color: AppTheme.primary, size: 28),
         const SizedBox(height: 6),
         Text(
           label,
           style: TextStyle(
-            color: widget.isSelected
+            color: isSelected
                 ? Colors.white.withValues(alpha: 0.8)
                 : Colors.white.withValues(alpha: 0.6),
             fontSize: 12,
@@ -717,7 +785,7 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
         Text(
           value,
           style: TextStyle(
-            color: widget.isSelected ? AppTheme.primary : Colors.white,
+            color: isSelected ? AppTheme.primary : Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -725,17 +793,35 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
       ],
     );
   }
+}
 
-  Widget _buildPriceInfo(Strings strings) {
-    final priceText = widget.isFromDistance && widget.vehicle.price != null
-        ? '${widget.vehicle.price!.toStringAsFixed(2)} €'
-        : widget.vehicle.fixedPrice ?? 'N/A';
+// ─────────────────────────────────────────────────────────────
+//  PRICE INFO ROW (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _PriceInfoRow extends StatelessWidget {
+  final bool isSelected;
+  final bool isFromDistance;
+  final _VehicleModel vehicle;
+
+  const _PriceInfoRow({
+    required this.isSelected,
+    required this.isFromDistance,
+    required this.vehicle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = Strings.of(context);
+    final priceText = isFromDistance && vehicle.price != null
+        ? '${vehicle.price!.toStringAsFixed(2)} €'
+        : vehicle.fixedPrice ?? 'N/A';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: widget.isSelected
+          colors: isSelected
               ? [
                   AppTheme.primary.withValues(alpha: 0.15),
                   AppTheme.primary.withValues(alpha: 0.1),
@@ -747,7 +833,7 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: widget.isSelected
+          color: isSelected
               ? AppTheme.primary.withValues(alpha: 0.3)
               : AppTheme.primary.withValues(alpha: 0.2),
           width: 1.5,
@@ -757,11 +843,9 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            widget.isFromDistance
-                ? strings.vehiclePrice
-                : strings.vehicleFixedPrice,
+            isFromDistance ? strings.vehiclePrice : strings.vehicleFixedPrice,
             style: TextStyle(
-              color: widget.isSelected
+              color: isSelected
                   ? Colors.white.withValues(alpha: 0.9)
                   : Colors.white.withValues(alpha: 0.7),
               fontSize: 14,
@@ -771,8 +855,8 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
           ),
           Text(
             priceText,
-            style: TextStyle(
-              color: widget.isSelected ? AppTheme.primary : AppTheme.primary,
+            style: const TextStyle(
+              color: AppTheme.primary,
               fontSize: 20,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
+import 'package:cabsudapp/reuse/isolate_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -63,6 +63,7 @@ class RoutePageState extends State<RoutePage> with TickerProviderStateMixin {
 
     if (!mounted) return;
 
+    _pulseController.stop();
     setState(() => _isLanguageLoaded = true);
     _fadeController.forward();
 
@@ -388,11 +389,9 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == 'OK' && mounted) {
-          _suggestionsNotifier.value = data['predictions']
-              .map<String>((item) => item['description'].toString())
-              .toList();
+        final suggestions = await parseAddressSuggestions(response.body);
+        if (mounted) {
+          _suggestionsNotifier.value = suggestions;
         }
       }
     } catch (e) {

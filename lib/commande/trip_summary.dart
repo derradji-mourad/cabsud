@@ -454,21 +454,21 @@ class _TripSummaryPageState extends State<TripSummaryPage>
                 ),
               ],
               const SizedBox(height: AppTheme.spaceL),
-              _buildDivider(),
+              const _LuxuryDivider(),
               const SizedBox(height: AppTheme.spaceM),
-              _buildInfoRow(
-                  Icons.info_outline, 'Description', description ?? 'N/A'),
+              _InfoRow(
+                  icon: Icons.info_outline, label: 'Description', value: description ?? 'N/A'),
               const SizedBox(height: AppTheme.spaceS),
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatChip(
-                        Icons.people_outline, '$passengers', 'Passengers'),
+                    child: _StatChip(
+                        icon: Icons.people_outline, value: '$passengers', label: 'Passengers'),
                   ),
                   const SizedBox(width: AppTheme.spaceM),
                   Expanded(
                     child:
-                        _buildStatChip(Icons.luggage_outlined, '$bags', 'Bags'),
+                        _StatChip(icon: Icons.luggage_outlined, value: '$bags', label: 'Bags'),
                   ),
                 ],
               ),
@@ -476,11 +476,11 @@ class _TripSummaryPageState extends State<TripSummaryPage>
               if (origin == 'distance') ...[
                 _buildPriceSection(),
                 const SizedBox(height: AppTheme.spaceS),
-                _buildInfoRow(Icons.route, 'Distance',
-                    '${distanceKm?.toStringAsFixed(2)} km'),
+                _InfoRow(icon: Icons.route, label: 'Distance',
+                    value: '${distanceKm?.toStringAsFixed(2)} km'),
                 const SizedBox(height: AppTheme.spaceS),
-                _buildInfoRow(Icons.access_time, 'Duration',
-                    '${durationMin?.toStringAsFixed(0)} min'),
+                _InfoRow(icon: Icons.access_time, label: 'Duration',
+                    value: '${durationMin?.toStringAsFixed(0)} min'),
               ] else if (origin == 'route') ...[
                 _buildFixedPriceSection(),
               ],
@@ -525,19 +525,19 @@ class _TripSummaryPageState extends State<TripSummaryPage>
             ],
           ),
           const SizedBox(height: AppTheme.spaceL),
-          _buildDivider(),
+          const _LuxuryDivider(),
           const SizedBox(height: AppTheme.spaceM),
-          _buildInfoItem("Name",
-              "${widget.tripData['firstName']} ${widget.tripData['lastName']}"),
+          _InfoItem(label: "Name",
+              value: "${widget.tripData['firstName']} ${widget.tripData['lastName']}"),
           if (widget.tripData['companyName'] != null &&
               widget.tripData['companyName'].isNotEmpty)
-            _buildInfoItem("Company", widget.tripData['companyName']),
-          _buildInfoItem("Address",
-              "${widget.tripData['address']}, ${widget.tripData['city']}, ${widget.tripData['zipcode']}, ${widget.tripData['region']}"),
-          _buildInfoItem("Phone", widget.tripData['phone']),
-          _buildInfoItem("Email", widget.tripData['email']),
-          _buildInfoItem("Date & Time",
-              origin == 'route' ? formattedDateTime1 : (tripDateTime ?? 'N/A')),
+            _InfoItem(label: "Company", value: widget.tripData['companyName']),
+          _InfoItem(label: "Address",
+              value: "${widget.tripData['address']}, ${widget.tripData['city']}, ${widget.tripData['zipcode']}, ${widget.tripData['region']}"),
+          _InfoItem(label: "Phone", value: widget.tripData['phone']),
+          _InfoItem(label: "Email", value: widget.tripData['email']),
+          _InfoItem(label: "Date & Time",
+              value: origin == 'route' ? formattedDateTime1 : (tripDateTime ?? 'N/A')),
         ],
       ),
     );
@@ -604,82 +604,6 @@ class _TripSummaryPageState extends State<TripSummaryPage>
     );
   }
 
-  Widget _buildDivider() {
-    return Container(
-      height: 1,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.transparent,
-            AppTheme.primaryGold.withValues(alpha: 0.3),
-            Colors.transparent,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, color: AppTheme.primaryGold, size: 20),
-        const SizedBox(width: AppTheme.spaceS),
-        Text(
-          '$label: ',
-          style: const TextStyle(
-            color: AppTheme.offWhite,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(
-              color: AppTheme.softWhite,
-              fontSize: 14,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatChip(IconData icon, String value, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppTheme.slate.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        border: Border.all(
-          color: AppTheme.primaryGold.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: AppTheme.primaryGold, size: 24),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppTheme.softWhite,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              color: AppTheme.offWhite.withValues(alpha: 0.7),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPriceSection() {
     return Container(
@@ -761,7 +685,117 @@ class _TripSummaryPageState extends State<TripSummaryPage>
     );
   }
 
-  Widget _buildInfoItem(String label, String? value) {
+}
+
+// ─────────────────────────────────────────────────────────────
+//  EXTRACTED WIDGETS
+// ─────────────────────────────────────────────────────────────
+
+class _LuxuryDivider extends StatelessWidget {
+  const _LuxuryDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 1,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.transparent,
+            AppTheme.primaryGold.withValues(alpha: 0.3),
+            Colors.transparent,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  const _InfoRow({required this.icon, required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: AppTheme.primaryGold, size: 20),
+        const SizedBox(width: AppTheme.spaceS),
+        Text(
+          '$label: ',
+          style: const TextStyle(
+            color: AppTheme.offWhite,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: AppTheme.softWhite,
+              fontSize: 14,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  const _StatChip({required this.icon, required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppTheme.slate.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        border: Border.all(
+          color: AppTheme.primaryGold.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: AppTheme.primaryGold, size: 24),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppTheme.softWhite,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: AppTheme.offWhite.withValues(alpha: 0.7),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoItem extends StatelessWidget {
+  final String label;
+  final String? value;
+  const _InfoItem({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(

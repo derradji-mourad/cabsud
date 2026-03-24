@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:cabsudapp/reuse/isolate_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -156,7 +157,7 @@ class QuickServicePageState extends State<QuickServicePage>
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = await parseJsonMap(response.body);
         if (data['totalFares'] != null) {
           final fares = List<Map<String, dynamic>>.from(data['totalFares']);
           _availableFaresNotifier.value = fares;
@@ -342,94 +343,7 @@ class QuickServicePageState extends State<QuickServicePage>
   }
 
   Widget _buildSuccessScreen() {
-    return Scaffold(
-      body: Container(
-        decoration: AppTheme.luxuryBackgroundGradient,
-        child: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          AppTheme.primaryGold.withValues(alpha: 0.3),
-                          AppTheme.primaryGold.withValues(alpha: 0.1),
-                        ],
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.check_circle_rounded,
-                      size: 80,
-                      color: AppTheme.primaryGold,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        AppTheme.lightGold,
-                        AppTheme.primaryGold,
-                        AppTheme.accentGold,
-                      ],
-                    ).createShader(bounds),
-                    child: Text(
-                      Strings.of(context).tripRequested,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.mediumImpact();
-                      Navigator.of(context).pushAndRemoveUntil(
-                        CustomPageRoute(child: const HomePage()),
-                        (route) => false,
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.primaryGoldGradient,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryGold.withValues(alpha: 0.4),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        Strings.of(context).backToHome,
-                        style: const TextStyle(
-                          color: AppTheme.richBlack,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+    return const _SuccessScreen();
   }
 
   Widget _buildFormScreen() {
@@ -839,14 +753,17 @@ class QuickServicePageState extends State<QuickServicePage>
                                                         ),
                                                         const SizedBox(
                                                             width: 12),
-                                                        Text(
-                                                          'Save card for future use',
-                                                          style: TextStyle(
-                                                            color: AppTheme
-                                                                .offWhite
-                                                                .withValues(
-                                                                    alpha: 0.8),
-                                                            fontSize: 14,
+                                                        Expanded(
+                                                          child: Text(
+                                                            'Save card for future use',
+                                                            style: TextStyle(
+                                                              color: AppTheme
+                                                                  .offWhite
+                                                                  .withValues(
+                                                                      alpha: 0.8),
+                                                              fontSize: 14,
+                                                            ),
+                                                            overflow: TextOverflow.ellipsis,
                                                           ),
                                                         ),
                                                       ],
@@ -1146,6 +1063,7 @@ class QuickServicePageState extends State<QuickServicePage>
     Strings.load(selectedLanguage);
 
     if (mounted) {
+      _pulseController.stop(); // Stop pulse — loading is done
       setState(() => _isLanguageLoaded = true);
       _fadeController.forward();
     }
@@ -1179,10 +1097,7 @@ class QuickServicePageState extends State<QuickServicePage>
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final predictions = data['predictions'] as List;
-        final suggestions =
-            predictions.map((p) => p['description'] as String).toList();
+        final suggestions = await parseAddressSuggestions(response.body);
 
         if (isPickup) {
           _pickupSuggestionsNotifier.value = suggestions;
@@ -1251,7 +1166,7 @@ class QuickServicePageState extends State<QuickServicePage>
 
         final response = await http.get(directionsUrl);
         if (response.statusCode == 200) {
-          final data = json.decode(response.body);
+          final data = await parseJsonMap(response.body);
           if (data['status'] == 'OK') {
             final polylineEncoded =
                 data['routes'][0]['overview_polyline']['points'];
@@ -1344,7 +1259,7 @@ class QuickServicePageState extends State<QuickServicePage>
 
     final response = await http.get(url);
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      final data = await parseJsonMap(response.body);
       if (data['status'] == 'OK') {
         final location = data['results'][0]['geometry']['location'];
         return {'lat': location['lat'], 'lon': location['lng']};
@@ -1355,45 +1270,15 @@ class QuickServicePageState extends State<QuickServicePage>
 
   Widget _buildPaymentOption(
       String value, String label, IconData icon, bool isSelected) {
-    return GestureDetector(
+    return _PaymentOptionTile(
+      value: value,
+      label: label,
+      icon: icon,
+      isSelected: isSelected,
       onTap: () {
         HapticFeedback.selectionClick();
         _paymentMethodNotifier.value = value;
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.primaryGold.withValues(alpha: 0.2)
-              : AppTheme.charcoal.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? AppTheme.primaryGold
-                : AppTheme.primaryGold.withValues(alpha: 0.1),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon,
-                color: isSelected ? AppTheme.primaryGold : AppTheme.offWhite,
-                size: 20),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? AppTheme.primaryGold : AppTheme.offWhite,
-                  fontWeight: FontWeight.w600,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -1459,6 +1344,167 @@ class _LuxuryAppBar extends StatelessWidget {
           ),
           const SizedBox(width: 48),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  SUCCESS SCREEN (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _SuccessScreen extends StatelessWidget {
+  const _SuccessScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: AppTheme.luxuryBackgroundGradient,
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.primaryGold.withValues(alpha: 0.3),
+                          AppTheme.primaryGold.withValues(alpha: 0.1),
+                        ],
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.check_circle_rounded,
+                      size: 80,
+                      color: AppTheme.primaryGold,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [
+                        AppTheme.lightGold,
+                        AppTheme.primaryGold,
+                        AppTheme.accentGold,
+                      ],
+                    ).createShader(bounds),
+                    child: Text(
+                      Strings.of(context).tripRequested,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      Navigator.of(context).pushAndRemoveUntil(
+                        CustomPageRoute(child: const HomePage()),
+                        (route) => false,
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.primaryGoldGradient,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryGold.withValues(alpha: 0.4),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        Strings.of(context).backToHome,
+                        style: const TextStyle(
+                          color: AppTheme.richBlack,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  PAYMENT OPTION TILE (extracted widget)
+// ─────────────────────────────────────────────────────────────
+
+class _PaymentOptionTile extends StatelessWidget {
+  final String value;
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _PaymentOptionTile({
+    required this.value,
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppTheme.primaryGold.withValues(alpha: 0.2)
+              : AppTheme.charcoal.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? AppTheme.primaryGold
+                : AppTheme.primaryGold.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,
+                color: isSelected ? AppTheme.primaryGold : AppTheme.offWhite,
+                size: 20),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? AppTheme.primaryGold : AppTheme.offWhite,
+                  fontWeight: FontWeight.w600,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

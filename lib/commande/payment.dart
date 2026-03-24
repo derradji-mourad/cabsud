@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:cabsudapp/reuse/isolate_helpers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cabsudapp/reuse/theme.dart';
@@ -99,7 +99,7 @@ class _PaymentScreenState extends State<PaymentScreen>
         throw Exception('Failed to create PaymentIntent.');
       }
 
-      final data = json.decode(response.body);
+      final data = await parseJsonMap(response.body);
       final clientSecret = data['client_secret'];
 
       await Stripe.instance.confirmPayment(
@@ -212,58 +212,18 @@ class _PaymentScreenState extends State<PaymentScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildAmountCard(),
+                  _AmountCard(price: _price),
                   const SizedBox(height: 24),
                   _buildPaymentForm(),
                   const SizedBox(height: 32),
                   _buildPayButton(),
                   const SizedBox(height: 24),
-                  _buildSecurityBadge(),
+                  const _SecurityBadge(),
                 ],
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildAmountCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: AppTheme.primaryGoldGradient,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primaryGold.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const Text(
-            'Total Amount',
-            style: TextStyle(
-              color: AppTheme.richBlack,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _price != null ? '€${_price!.toStringAsFixed(2)}' : '...',
-            style: const TextStyle(
-              color: AppTheme.richBlack,
-              fontSize: 40,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -1,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -275,7 +235,7 @@ class _PaymentScreenState extends State<PaymentScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle('Email Address', Icons.email_outlined),
+          const _SectionTitle(title: 'Email Address', icon: Icons.email_outlined),
           const SizedBox(height: 12),
           _buildTextField(
             controller: _emailController,
@@ -283,7 +243,7 @@ class _PaymentScreenState extends State<PaymentScreen>
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 24),
-          _buildSectionTitle('Card Details', Icons.credit_card_rounded),
+          const _SectionTitle(title: 'Card Details', icon: Icons.credit_card_rounded),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -321,7 +281,7 @@ class _PaymentScreenState extends State<PaymentScreen>
             ),
           ),
           const SizedBox(height: 24),
-          _buildSectionTitle('Cardholder Name', Icons.person_outline),
+          const _SectionTitle(title: 'Cardholder Name', icon: Icons.person_outline),
           const SizedBox(height: 12),
           _buildTextField(
             controller: _nameController,
@@ -330,23 +290,6 @@ class _PaymentScreenState extends State<PaymentScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, color: AppTheme.primaryGold, size: 20),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            color: AppTheme.softWhite,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
     );
   }
 
@@ -457,8 +400,87 @@ class _PaymentScreenState extends State<PaymentScreen>
       ),
     );
   }
+}
 
-  Widget _buildSecurityBadge() {
+// ─────────────────────────────────────────────────────────────
+//  EXTRACTED WIDGETS
+// ─────────────────────────────────────────────────────────────
+
+class _AmountCard extends StatelessWidget {
+  final double? price;
+  const _AmountCard({required this.price});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: AppTheme.primaryGoldGradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryGold.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'Total Amount',
+            style: TextStyle(
+              color: AppTheme.richBlack,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            price != null ? '€${price!.toStringAsFixed(2)}' : '...',
+            style: const TextStyle(
+              color: AppTheme.richBlack,
+              fontSize: 40,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  const _SectionTitle({required this.title, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: AppTheme.primaryGold, size: 20),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppTheme.softWhite,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SecurityBadge extends StatelessWidget {
+  const _SecurityBadge();
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
