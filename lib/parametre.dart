@@ -23,9 +23,9 @@ class _SettingsPageState extends State<SettingsPage>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1000));
+        vsync: this, duration: const Duration(milliseconds: 900));
     _fadeAnimation =
-        CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+        CurvedAnimation(parent: _controller, curve: Curves.easeOut);
 
     _loadSettings();
     _fetchUserInfo();
@@ -47,13 +47,11 @@ class _SettingsPageState extends State<SettingsPage>
 
   Future<void> _fetchUserInfo() async {
     final user = Supabase.instance.client.auth.currentUser;
-    if (user != null) {
-      if (mounted) {
-        setState(() {
-          _userEmail = user.email ?? '';
-          _userName = user.email ?? 'User';
-        });
-      }
+    if (user != null && mounted) {
+      setState(() {
+        _userEmail = user.email ?? '';
+        _userName = user.email ?? 'User';
+      });
     }
   }
 
@@ -80,39 +78,55 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   void _showTermsDialog() {
+    final strings = Strings.of(context);
     showDialog(
       context: context,
-      builder: (_) => Dialog(
+      builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
-          decoration: AppTheme.premiumCardDecoration.copyWith(
+          decoration: BoxDecoration(
             color: AppTheme.card,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppTheme.primaryGold.withValues(alpha: 0.2),
+              width: 1,
+            ),
           ),
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                width: 32,
+                height: 2,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.subtleGoldGradient,
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
-                Strings.of(context).termsOfService,
+                strings.termsOfService,
                 style: const TextStyle(
                   color: AppTheme.primaryGold,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                 ),
               ),
               const SizedBox(height: 16),
               Container(
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+                  maxHeight: MediaQuery.of(ctx).size.height * 0.45,
                 ),
                 child: SingleChildScrollView(
                   child: Text(
-                    Strings.of(context).termsOfServiceContent,
-                    style: const TextStyle(
-                      color: AppTheme.softWhite,
+                    strings.termsOfServiceContent,
+                    style: TextStyle(
+                      color: AppTheme.softWhite.withValues(alpha: 0.75),
                       fontSize: 14,
-                      height: 1.5,
+                      height: 1.65,
                     ),
                   ),
                 ),
@@ -122,21 +136,34 @@ class _SettingsPageState extends State<SettingsPage>
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
+                    onPressed: () => Navigator.of(ctx).pop(false),
                     child: Text(
-                      "Cancel",
+                      strings.cancel,
                       style: TextStyle(
-                          color: AppTheme.softWhite.withValues(alpha: 0.6)),
+                        color: AppTheme.softWhite.withValues(alpha: 0.45),
+                        fontSize: 14,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryGold,
-                      foregroundColor: AppTheme.richBlack,
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () => Navigator.of(ctx).pop(true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.subtleGoldGradient,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        strings.agree,
+                        style: const TextStyle(
+                          color: AppTheme.richBlack,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
-                    child: const Text("I Agree"),
                   ),
                 ],
               ),
@@ -147,87 +174,149 @@ class _SettingsPageState extends State<SettingsPage>
     );
   }
 
+  String _userInitials() {
+    if (_userName.isEmpty) return '?';
+    final parts = _userName.split('@');
+    final name = parts.first;
+    if (name.length >= 2) return name.substring(0, 2).toUpperCase();
+    return name.toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final strings = Strings.of(context);
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          Strings.of(context).settingsTitle,
-          style: const TextStyle(
-            fontSize: 24,
-            color: AppTheme.primaryGold,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.0,
-          ),
-        ),
-        iconTheme: const IconThemeData(color: AppTheme.primaryGold),
-      ),
+      backgroundColor: AppTheme.background,
       body: Container(
         decoration: AppTheme.luxuryBackgroundGradient,
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 100, 20, 20),
-            children: [
-              _buildUserInfoCard(),
-              const SizedBox(height: 24),
-              _buildSettingsCard(),
-              const SizedBox(height: 32),
-              _buildLogoutButton(),
-            ],
+          child: SafeArea(
+            child: ListView(
+              padding: EdgeInsets.fromLTRB(24, 8, 24, 24 + bottomPadding),
+              children: [
+                _buildHeader(strings),
+                const SizedBox(height: 28),
+                _buildProfileCard(),
+                const SizedBox(height: 20),
+                _buildSectionLabel('PRÉFÉRENCES'),
+                const SizedBox(height: 10),
+                _buildSettingsCard(strings),
+                const SizedBox(height: 32),
+                _buildLogoutButton(strings),
+                const SizedBox(height: 80),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildUserInfoCard() {
-    return Container(
-      decoration: AppTheme.premiumCardDecoration,
-      padding: const EdgeInsets.all(20),
+  Widget _buildHeader(Strings strings) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 16, 4, 0),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppTheme.richBlack,
-              border: Border.all(color: AppTheme.primaryGold, width: 2),
-            ),
-            child: const Icon(
-              Icons.person_rounded,
-              color: AppTheme.primaryGold,
-              size: 32,
+          ShaderMask(
+            shaderCallback: (b) =>
+                AppTheme.subtleGoldGradient.createShader(b),
+            child: Text(
+              strings.settingsTitle.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 3,
+                color: Colors.white,
+              ),
             ),
           ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppTheme.primaryGold.withValues(alpha: 0.15),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            height: 3,
+            decoration: BoxDecoration(
+              gradient: AppTheme.subtleGoldGradient,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+            child: Row(
               children: [
-                Text(
-                  _userName.isEmpty ? 'Loading...' : _userName,
-                  style: const TextStyle(
-                    color: AppTheme.softWhite,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: AppTheme.subtleGoldGradient,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  child: Center(
+                    child: Text(
+                      _userInitials(),
+                      style: const TextStyle(
+                        color: AppTheme.richBlack,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  _userEmail,
-                  style: TextStyle(
-                    color: AppTheme.softWhite.withValues(alpha: 0.6),
-                    fontSize: 14,
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _userName.isEmpty ? '...' : _userName.split('@').first,
+                        style: const TextStyle(
+                          color: AppTheme.softWhite,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _userEmail,
+                        style: TextStyle(
+                          color: AppTheme.softWhite.withValues(alpha: 0.45),
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -237,52 +326,74 @@ class _SettingsPageState extends State<SettingsPage>
     );
   }
 
-  Widget _buildSettingsCard() {
+  Widget _buildSectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: AppTheme.primaryGold.withValues(alpha: 0.55),
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 2.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsCard(Strings strings) {
     return Container(
-      decoration: AppTheme.premiumCardDecoration,
+      decoration: BoxDecoration(
+        color: AppTheme.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppTheme.primaryGold.withValues(alpha: 0.12),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           _buildLuxuryTile(
-            title: Strings.of(context).languageTitle,
+            title: strings.languageTitle,
             icon: Icons.language_rounded,
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.richBlack,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: AppTheme.primaryGold.withValues(alpha: 0.3)),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _selectedLanguage,
-                  dropdownColor: AppTheme.card,
-                  icon: const Icon(Icons.arrow_drop_down,
-                      color: AppTheme.primaryGold),
-                  style: const TextStyle(color: AppTheme.softWhite),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'fr',
-                      child: Text('Français'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'en',
-                      child: Text('English'),
-                    ),
-                  ],
-                  onChanged: _changeLanguage,
+            trailing: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedLanguage,
+                dropdownColor: AppTheme.card,
+                icon: Icon(
+                  Icons.expand_more_rounded,
+                  color: AppTheme.primaryGold.withValues(alpha: 0.6),
+                  size: 20,
                 ),
+                style: TextStyle(
+                  color: AppTheme.softWhite.withValues(alpha: 0.75),
+                  fontSize: 14,
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'fr', child: Text('Français')),
+                  DropdownMenuItem(value: 'en', child: Text('English')),
+                ],
+                onChanged: _changeLanguage,
               ),
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Divider(
-                color: AppTheme.primaryGold.withValues(alpha: 0.1), height: 1),
+              color: AppTheme.primaryGold.withValues(alpha: 0.08),
+              height: 1,
+            ),
           ),
           _buildLuxuryTile(
-            title: Strings.of(context).termsAndPrivacy,
-            icon: Icons.privacy_tip_rounded,
+            title: strings.termsAndPrivacy,
+            icon: Icons.shield_outlined,
             onTap: _showTermsDialog,
           ),
         ],
@@ -296,63 +407,75 @@ class _SettingsPageState extends State<SettingsPage>
     Widget? trailing,
     VoidCallback? onTap,
   }) {
-    return ListTile(
+    return InkWell(
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppTheme.primaryGold.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(18),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGold.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: AppTheme.primaryGold, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: AppTheme.softWhite.withValues(alpha: 0.85),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            trailing ??
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppTheme.softWhite.withValues(alpha: 0.2),
+                  size: 20,
+                ),
+          ],
         ),
-        child: Icon(icon, color: AppTheme.primaryGold, size: 24),
       ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: AppTheme.softWhite,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      trailing: trailing ??
-          Icon(
-            Icons.arrow_forward_ios_rounded,
-            color: AppTheme.softWhite.withValues(alpha: 0.3),
-            size: 18,
-          ),
     );
   }
 
-  Widget _buildLogoutButton() {
+  Widget _buildLogoutButton(Strings strings) {
     return GestureDetector(
       onTap: _logout,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.symmetric(vertical: 17),
         decoration: BoxDecoration(
-          gradient: AppTheme.primaryGoldGradient,
-          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          gradient: AppTheme.subtleGoldGradient,
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryGold.withValues(alpha: 0.3),
-              blurRadius: 16,
+              color: AppTheme.primaryGold.withValues(alpha: 0.2),
+              blurRadius: 20,
               offset: const Offset(0, 8),
+              spreadRadius: -4,
             ),
           ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.logout_rounded, color: AppTheme.richBlack),
+            const Icon(Icons.logout_rounded,
+                color: AppTheme.richBlack, size: 20),
             const SizedBox(width: 12),
             Text(
-              Strings.of(context).logoutButton.toUpperCase(),
+              strings.logoutButton.toUpperCase(),
               style: const TextStyle(
                 color: AppTheme.richBlack,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 2,
               ),
             ),
           ],

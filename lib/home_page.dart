@@ -11,31 +11,7 @@ import 'package:cabsudapp/services/services_type_page.dart';
 import 'package:cabsudapp/services/quick_service_page.dart';
 
 // ─────────────────────────────────────────────────────────────
-//  DATA MODEL
-// ─────────────────────────────────────────────────────────────
-
-class ServiceData {
-  final String title;
-  final String subtitle;
-  final String description;
-  final String imagePath;
-  final IconData icon;
-  final Color color;
-  final Widget destination;
-
-  const ServiceData({
-    required this.title,
-    required this.subtitle,
-    required this.description,
-    required this.imagePath,
-    required this.icon,
-    required this.color,
-    required this.destination,
-  });
-}
-
-// ─────────────────────────────────────────────────────────────
-//  HOME PAGE (root)
+//  ROOT
 // ─────────────────────────────────────────────────────────────
 
 class HomePage extends StatefulWidget {
@@ -45,51 +21,35 @@ class HomePage extends StatefulWidget {
   HomePageState createState() => HomePageState();
 }
 
-class HomePageState extends State<HomePage> with TickerProviderStateMixin {
+class HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   bool _isLanguageLoaded = false;
-  late AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    )..repeat(reverse: true);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeLanguage();
       _precacheImages();
     });
   }
 
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
-
   Future<void> _initializeLanguage() async {
     final prefs = await SharedPreferences.getInstance();
-    final selectedLanguage = prefs.getString('language') ?? 'fr';
-    if (!prefs.containsKey('language')) {
-      await prefs.setString('language', selectedLanguage);
-    }
-    Strings.load(selectedLanguage);
-    if (mounted) {
-      _pulseController.stop();
-      setState(() => _isLanguageLoaded = true);
-    }
+    final lang = prefs.getString('language') ?? 'fr';
+    if (!prefs.containsKey('language')) await prefs.setString('language', lang);
+    Strings.load(lang);
+    if (mounted) setState(() => _isLanguageLoaded = true);
   }
 
   void _precacheImages() {
-    for (final asset in [
+    for (final path in [
       'assets/intro/mise_a_disposition.jpg',
+      'assets/intro/airport_transportation.jpg',
       'assets/intro/tourisem_transport.jpg',
       'assets/intro/Atob.jpg',
     ]) {
-      precacheImage(AssetImage(asset), context);
+      precacheImage(AssetImage(path), context);
     }
   }
 
@@ -97,30 +57,23 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      body: Container(
-        decoration: AppTheme.luxuryBackgroundGradient,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 800),
-          switchInCurve: Curves.easeInOutCubic,
-          switchOutCurve: Curves.easeOut,
-          child: _isLanguageLoaded
-              ? IndexedStack(
-                  key: const ValueKey('content'),
-                  index: _currentIndex,
-                  children: const [
-                    ModernCarouselHome(),
-                    ContactPage(),
-                    SettingsPage(),
-                  ],
-                )
-              : _LoadingScreen(
-                  key: const ValueKey('loading'),
-                  pulseController: _pulseController,
-                ),
-        ),
+      backgroundColor: AppTheme.background,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 500),
+        child: _isLanguageLoaded
+            ? IndexedStack(
+                key: const ValueKey('content'),
+                index: _currentIndex,
+                children: const [
+                  _HomeContent(),
+                  ContactPage(),
+                  SettingsPage(),
+                ],
+              )
+            : const _LoadingScreen(key: ValueKey('loading')),
       ),
       bottomNavigationBar: RepaintBoundary(
-        child: _MinimalNavBar(
+        child: _FloatingNavBar(
           currentIndex: _currentIndex,
           onIndexChanged: (i) => setState(() => _currentIndex = i),
         ),
@@ -130,58 +83,42 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  LOADING SCREEN (extracted widget)
+//  LOADING
 // ─────────────────────────────────────────────────────────────
 
 class _LoadingScreen extends StatelessWidget {
-  final AnimationController pulseController;
-
-  const _LoadingScreen({super.key, required this.pulseController});
+  const _LoadingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: AnimatedBuilder(
-        animation: pulseController,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: 0.95 + (pulseController.value * 0.05),
-            child: child,
-          );
-        },
+    return Container(
+      decoration: AppTheme.luxuryBackgroundGradient,
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.primaryGold.withValues(alpha: 0.4),
-                    AppTheme.primaryGold.withValues(alpha: 0.1),
-                    Colors.transparent,
-                  ],
+            RepaintBoundary(
+              child: SizedBox(
+                width: 26,
+                height: 26,
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.5,
+                  valueColor: AlwaysStoppedAnimation(
+                    AppTheme.primaryGold.withValues(alpha: 0.6),
+                  ),
                 ),
               ),
-              child: const Icon(
-                Icons.directions_car_rounded,
-                size: 50,
-                color: AppTheme.primaryGold,
-              ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
             ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [AppTheme.lightGold, AppTheme.primaryGold],
-              ).createShader(bounds),
+              shaderCallback: (b) =>
+                  AppTheme.subtleGoldGradient.createShader(b),
               child: const Text(
                 'CABSUD',
                 style: TextStyle(
-                  fontSize: 40,
+                  fontSize: 28,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 6,
+                  letterSpacing: 7,
                   color: Colors.white,
                 ),
               ),
@@ -194,45 +131,44 @@ class _LoadingScreen extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  MINIMAL NAV BAR (extracted widget)
+//  FLOATING NAV BAR
 // ─────────────────────────────────────────────────────────────
 
-class _MinimalNavBar extends StatelessWidget {
+class _FloatingNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onIndexChanged;
 
-  const _MinimalNavBar({
+  const _FloatingNavBar({
     required this.currentIndex,
     required this.onIndexChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final bottom = MediaQuery.of(context).padding.bottom;
     final strings = Strings.of(context);
 
     return Container(
-      margin: EdgeInsets.fromLTRB(20, 0, 20, 20 + bottomPadding),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      margin: EdgeInsets.fromLTRB(20, 0, 20, 14 + bottom),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
-        color: AppTheme.card.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(30),
+        color: const Color(0xFF0B0F18),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: AppTheme.primaryGold.withValues(alpha: 0.3),
+          color: AppTheme.primaryGold.withValues(alpha: 0.22),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryGold.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
-            spreadRadius: 2,
+            color: AppTheme.primaryGold.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
           BoxShadow(
-            color: AppTheme.richBlack.withValues(alpha: 0.8),
-            blurRadius: 30,
-            offset: const Offset(0, 15),
-            spreadRadius: 5,
+            color: Colors.black.withValues(alpha: 0.6),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -263,10 +199,6 @@ class _MinimalNavBar extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-//  NAV ITEM (extracted widget)
-// ─────────────────────────────────────────────────────────────
-
 class _NavItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -288,23 +220,34 @@ class _NavItem extends StatelessWidget {
         onTap();
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
         padding: EdgeInsets.symmetric(
-          horizontal: isActive ? 20 : 12,
-          vertical: 12,
+          horizontal: isActive ? 20 : 14,
+          vertical: 11,
         ),
         decoration: BoxDecoration(
-          gradient: isActive ? AppTheme.primaryGoldGradient : null,
+          gradient: isActive ? AppTheme.subtleGoldGradient : null,
           borderRadius: BorderRadius.circular(20),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: AppTheme.primaryGold.withValues(alpha: 0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              color: isActive ? AppTheme.richBlack : AppTheme.offWhite,
-              size: 24,
+              color: isActive
+                  ? AppTheme.richBlack
+                  : AppTheme.offWhite.withValues(alpha: 0.35),
+              size: 22,
             ),
             if (isActive) ...[
               const SizedBox(width: 8),
@@ -313,8 +256,9 @@ class _NavItem extends StatelessWidget {
                   label,
                   style: const TextStyle(
                     color: AppTheme.richBlack,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                     fontSize: 13,
+                    letterSpacing: 0.2,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
@@ -329,391 +273,388 @@ class _NavItem extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  MODERN CAROUSEL HOME
+//  HOME CONTENT
 // ─────────────────────────────────────────────────────────────
 
-class ModernCarouselHome extends StatefulWidget {
-  const ModernCarouselHome({super.key});
+class _HomeContent extends StatefulWidget {
+  const _HomeContent();
 
   @override
-  State<ModernCarouselHome> createState() => _ModernCarouselHomeState();
+  State<_HomeContent> createState() => _HomeContentState();
 }
 
-class _ModernCarouselHomeState extends State<ModernCarouselHome>
+class _HomeContentState extends State<_HomeContent>
     with SingleTickerProviderStateMixin {
-  final PageController _pageController = PageController(viewportFraction: 0.85);
-  int _currentPage = 0;
-  late AnimationController _fadeController;
+  late final AnimationController _enter;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
 
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..forward();
-
-    _pageController.addListener(() {
-      final page = _pageController.page ?? 0;
-      final newIndex = page.round();
-      if (newIndex != _currentPage) {
-        setState(() => _currentPage = newIndex);
-      }
-    });
+    _enter = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 700));
+    _fade = CurvedAnimation(parent: _enter, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.035),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _enter, curve: Curves.easeOutCubic));
+    _enter.forward();
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
-    _fadeController.dispose();
+    _enter.dispose();
     super.dispose();
   }
 
-  List<ServiceData> _buildServices(Strings strings) {
-    return [
-      ServiceData(
-        title: strings.quickServiceTitle,
-        subtitle: strings.quickServiceSubtitle,
-        description: 'Book a ride in seconds',
-        imagePath: 'assets/intro/mise_a_disposition.jpg',
-        icon: Icons.flash_on_rounded,
-        color: AppTheme.luxuryGold,
-        destination: const QuickServicePage(),
+  void _go(Widget page) {
+    HapticFeedback.mediumImpact();
+    Navigator.of(context).push(PageRouteBuilder(
+      pageBuilder: (_, a, __) => page,
+      transitionsBuilder: (_, a, __, child) => FadeTransition(
+        opacity: CurvedAnimation(parent: a, curve: Curves.easeOut),
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.97, end: 1.0)
+              .animate(CurvedAnimation(parent: a, curve: Curves.easeOutCubic)),
+          child: child,
+        ),
       ),
-      ServiceData(
-        title: strings.faireUneCommande1,
-        subtitle: 'Book Your Ride',
-        description: 'Premium transport at your fingertips',
-        imagePath: 'assets/intro/mise_a_disposition.jpg',
-        icon: Icons.directions_car_rounded,
-        color: AppTheme.primaryGold,
-        destination: const ServiceSelectionPage(),
-      ),
-      ServiceData(
-        title: strings.miseADisposition1,
-        subtitle: 'Car Disposal',
-        description: 'Luxury vehicle at your disposal',
-        imagePath: 'assets/intro/tourisem_transport.jpg',
-        icon: Icons.calendar_today_rounded,
-        color: AppTheme.accentGold,
-        destination: const RoutePage(),
-      ),
-      ServiceData(
-        title: strings.nosServices1,
-        subtitle: 'All Services',
-        description: 'Explore our premium offerings',
-        imagePath: 'assets/intro/Atob.jpg',
-        icon: Icons.star_rounded,
-        color: AppTheme.darkGold,
-        destination: const ServicesPage(),
-      ),
-    ];
+      transitionDuration: const Duration(milliseconds: 460),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
-    final services = _buildServices(Strings.of(context));
-
-    return SafeArea(
-      child: FadeTransition(
-        opacity: CurvedAnimation(
-          parent: _fadeController,
-          curve: Curves.easeOut,
+    final strings = Strings.of(context);
+    return Stack(
+      children: [
+        // Static background gold bloom — top-right warmth
+        Positioned(
+          top: -80,
+          right: -80,
+          child: Container(
+            width: 340,
+            height: 340,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  AppTheme.primaryGold.withValues(alpha: 0.055),
+                  AppTheme.primaryGold.withValues(alpha: 0.015),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
         ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final availableHeight = constraints.maxHeight;
-            final cardHeightFactor = availableHeight > 600 ? 0.60 : 0.55;
-
-            return Column(
-              children: [
-                const _ModernHeader(),
-                Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: services.length,
-                    onPageChanged: (_) => HapticFeedback.selectionClick(),
-                    itemBuilder: (context, index) {
-                      return AnimatedBuilder(
-                        animation: _pageController,
-                        builder: (context, child) {
-                          double value = 1.0;
-                          if (_pageController.position.haveDimensions) {
-                            value = (_pageController.page ?? 0) - index;
-                            value = (1 - (value.abs() * 0.3)).clamp(0.0, 1.0);
-                            value =
-                                Curves.easeOut.transform(value).clamp(0.75, 1.0);
-                          }
-                          return Center(
-                            child: SizedBox(
-                              height: availableHeight * cardHeightFactor * value,
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: Carousel3DCard(
-                          service: services[index],
-                          isActive: _currentPage == index,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                _PageIndicator(
-                  length: services.length,
-                  currentPage: _currentPage,
-                ),
-                const SizedBox(height: 70),
-              ],
-            );
-          },
+        FadeTransition(
+          opacity: _fade,
+          child: SlideTransition(
+            position: _slide,
+            child: SafeArea(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(child: _buildHeader()),
+                  SliverToBoxAdapter(child: _buildHero(strings)),
+                  const SliverToBoxAdapter(child: _SectionDivider()),
+                  SliverToBoxAdapter(child: _buildGrid(strings)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 110)),
+                ],
+              ),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
-}
 
-// ─────────────────────────────────────────────────────────────
-//  MODERN HEADER (extracted widget)
-// ─────────────────────────────────────────────────────────────
+  // ─── Header ──────────────────────────────────────────────────
 
-class _ModernHeader extends StatelessWidget {
-  const _ModernHeader();
+  Widget _buildHeader() {
+    final h = DateTime.now().hour;
+    final greeting =
+        h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
 
-  @override
-  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
+      padding: const EdgeInsets.fromLTRB(24, 20, 20, 24),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ShaderMask(
-                shaderCallback: (bounds) =>
-                    AppTheme.primaryGoldGradient.createShader(bounds),
-                child: const Text(
-                  'CABSUD',
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  greeting,
                   style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 3,
-                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: AppTheme.offWhite.withValues(alpha: 0.38),
+                    letterSpacing: 0.5,
                   ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Choose Your Journey',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.offWhite.withValues(alpha: 0.6),
-                  letterSpacing: 1,
+                const SizedBox(height: 2),
+                ShaderMask(
+                  shaderCallback: (b) =>
+                      AppTheme.primaryGoldGradient.createShader(b),
+                  child: const Text(
+                    'CABSUD',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 5,
+                      color: Colors.white,
+                      height: 1.0,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    ShaderMask(
+                      shaderCallback: (b) =>
+                          AppTheme.subtleGoldGradient.createShader(b),
+                      child: Container(
+                        width: 24,
+                        height: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'CHAUFFEUR PRIVÉ',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primaryGold.withValues(alpha: 0.55),
+                        letterSpacing: 3,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
+          // Bell — gold gradient fill for premium look
           Container(
+            margin: const EdgeInsets.only(left: 12),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              gradient: AppTheme.primaryGoldGradient,
+              gradient: AppTheme.subtleGoldGradient,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryGold.withValues(alpha: 0.4),
-                  blurRadius: 15,
-                  offset: const Offset(0, 6),
+                  color: AppTheme.primaryGold.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  offset: const Offset(0, 5),
                 ),
               ],
             ),
             child: const Icon(
               Icons.notifications_rounded,
               color: AppTheme.richBlack,
-              size: 24,
+              size: 22,
             ),
           ),
         ],
       ),
     );
   }
-}
 
-// ─────────────────────────────────────────────────────────────
-//  PAGE INDICATOR (extracted widget)
-// ─────────────────────────────────────────────────────────────
+  // ─── Hero card ────────────────────────────────────────────────
 
-class _PageIndicator extends StatelessWidget {
-  final int length;
-  final int currentPage;
-
-  const _PageIndicator({
-    required this.length,
-    required this.currentPage,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(
-        length,
-        (index) => AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          height: 8,
-          width: currentPage == index ? 24 : 8,
-          decoration: BoxDecoration(
-            gradient:
-                currentPage == index ? AppTheme.primaryGoldGradient : null,
-            color: currentPage == index
-                ? null
-                : AppTheme.offWhite.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-//  CAROUSEL 3D CARD (already a separate widget, kept as-is)
-// ─────────────────────────────────────────────────────────────
-
-class Carousel3DCard extends StatefulWidget {
-  final ServiceData service;
-  final bool isActive;
-
-  const Carousel3DCard({
-    super.key,
-    required this.service,
-    required this.isActive,
-  });
-
-  @override
-  State<Carousel3DCard> createState() => _Carousel3DCardState();
-}
-
-class _Carousel3DCardState extends State<Carousel3DCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _shimmerController;
-  bool _isPressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _shimmerController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2500),
-    );
-    if (widget.isActive) {
-      _shimmerController.repeat();
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant Carousel3DCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isActive && !oldWidget.isActive) {
-      _shimmerController.repeat();
-    } else if (!widget.isActive && oldWidget.isActive) {
-      _shimmerController.stop();
-      _shimmerController.reset();
-    }
-  }
-
-  @override
-  void dispose() {
-    _shimmerController.dispose();
-    super.dispose();
-  }
-
-  void _navigateToService() {
-    HapticFeedback.mediumImpact();
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            widget.service.destination,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOut,
-            ),
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.95, end: 1.0).animate(
-                CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                ),
-              ),
-              child: child,
-            ),
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 600),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) {
-        HapticFeedback.lightImpact();
-        setState(() => _isPressed = true);
-      },
-      onTapUp: (_) => setState(() => _isPressed = false),
-      onTapCancel: () => setState(() => _isPressed = false),
-      onTap: _navigateToService,
-      child: AnimatedScale(
-        scale: _isPressed ? 0.96 : 1.0,
-        curve: Curves.easeOutCubic,
-        duration: const Duration(milliseconds: 200),
+  Widget _buildHero(Strings strings) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+      child: _Tappable(
+        onTap: () => _go(const QuickServicePage()),
+        radius: 24,
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
+          height: 240,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: widget.service.color.withValues(alpha: 0.2),
-                blurRadius: 30,
-                offset: const Offset(0, 20),
-                spreadRadius: -5,
+                color: AppTheme.primaryGold.withValues(alpha: 0.22),
+                blurRadius: 32,
+                offset: const Offset(0, 14),
+                spreadRadius: -4,
               ),
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
+                color: Colors.black.withValues(alpha: 0.55),
                 blurRadius: 40,
-                offset: const Offset(0, 30),
-                spreadRadius: -10,
+                offset: const Offset(0, 20),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(24),
             child: Stack(
               fit: StackFit.expand,
-              clipBehavior: Clip.hardEdge,
               children: [
                 // Background image
                 Image.asset(
-                  widget.service.imagePath,
+                  'assets/intro/mise_a_disposition.jpg',
                   fit: BoxFit.cover,
+                  gaplessPlayback: true,
                 ),
-
-                // Dark overlay
-                const _CardDarkOverlay(),
-
-                // Animated shimmer (only if active)
-                if (widget.isActive)
-                  _CardShimmer(controller: _shimmerController),
-
+                // Dark veil
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.12),
+                        Colors.black.withValues(alpha: 0.5),
+                        Colors.black.withValues(alpha: 0.88),
+                      ],
+                      stops: const [0.0, 0.45, 1.0],
+                    ),
+                  ),
+                ),
+                // Gold ambient glow — top-right
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: Alignment.topRight,
+                        colors: [
+                          AppTheme.primaryGold.withValues(alpha: 0.18),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Gold top border stripe
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 3,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.primaryGoldGradient,
+                    ),
+                  ),
+                ),
                 // Content
-                _CardContent(
-                  service: widget.service,
-                  isActive: widget.isActive,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 20, 22, 22),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 11, vertical: 5),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.primaryGold.withValues(alpha: 0.28),
+                              AppTheme.primaryGold.withValues(alpha: 0.12),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppTheme.primaryGold.withValues(alpha: 0.6),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.flash_on_rounded,
+                              color: AppTheme.primaryGold,
+                              size: 10,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'EXPRESS',
+                              style: TextStyle(
+                                color: AppTheme.primaryGold,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 2.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      // Title
+                      Text(
+                        strings.quickServiceTitle,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          height: 1.15,
+                          letterSpacing: -0.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Réservez votre chauffeur en quelques secondes',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.55),
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 18),
+                      // CTA
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 10),
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.primaryGoldGradient,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  AppTheme.primaryGold.withValues(alpha: 0.4),
+                              blurRadius: 14,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'RÉSERVER MAINTENANT',
+                              style: TextStyle(
+                                color: AppTheme.richBlack,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.8,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              color: AppTheme.richBlack,
+                              size: 14,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -722,239 +663,498 @@ class _Carousel3DCardState extends State<Carousel3DCard>
       ),
     );
   }
-}
 
-// ─────────────────────────────────────────────────────────────
-//  CARD DARK OVERLAY (extracted widget)
-// ─────────────────────────────────────────────────────────────
+  // ─── Service grid ─────────────────────────────────────────────
 
-class _CardDarkOverlay extends StatelessWidget {
-  const _CardDarkOverlay();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.2),
-            Colors.black.withValues(alpha: 0.6),
-            Colors.black.withValues(alpha: 0.9),
-          ],
-          stops: const [0.0, 0.5, 1.0],
-        ),
+  Widget _buildGrid(Strings strings) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+      child: Column(
+        children: [
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _CinematicTile(
+                    imagePath: 'assets/intro/airport_transportation.jpg',
+                    icon: Icons.directions_car_rounded,
+                    badge: 'PREMIUM',
+                    title: strings.faireUneCommande1,
+                    subtitle: 'Transport sur mesure',
+                    onTap: () => _go(const ServiceSelectionPage()),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _CinematicTile(
+                    imagePath: 'assets/intro/tourisem_transport.jpg',
+                    icon: Icons.calendar_today_rounded,
+                    badge: 'DÉDIÉ',
+                    title: strings.miseADisposition1,
+                    subtitle: 'Véhicule à disposition',
+                    onTap: () => _go(const RoutePage()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          _WideServiceTile(
+            icon: Icons.star_rounded,
+            title: strings.nosServices1,
+            subtitle: 'Toutes nos prestations premium',
+            onTap: () => _go(const ServicesPage()),
+          ),
+        ],
       ),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-//  CARD SHIMMER (extracted widget)
+//  SECTION DIVIDER
 // ─────────────────────────────────────────────────────────────
 
-class _CardShimmer extends StatelessWidget {
-  final AnimationController controller;
-
-  const _CardShimmer({required this.controller});
+class _SectionDivider extends StatelessWidget {
+  const _SectionDivider();
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(-300 + (controller.value * 900), 0),
-          child: Transform.rotate(
-            angle: 0.4,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 18),
+      child: Row(
+        children: [
+          ShaderMask(
+            shaderCallback: (b) =>
+                AppTheme.subtleGoldGradient.createShader(b),
             child: Container(
-              width: 100,
+              width: 4,
+              height: 16,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'NOS SERVICES',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.offWhite.withValues(alpha: 0.55),
+              letterSpacing: 3,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Container(
+              height: 1,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.transparent,
-                    Colors.white.withValues(alpha: 0.1),
+                    AppTheme.primaryGold.withValues(alpha: 0.25),
                     Colors.transparent,
                   ],
                 ),
               ),
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-//  CARD CONTENT (extracted widget)
+//  CINEMATIC TILE (compact, 2-column, image background)
 // ─────────────────────────────────────────────────────────────
 
-class _CardContent extends StatelessWidget {
-  final ServiceData service;
-  final bool isActive;
+class _CinematicTile extends StatefulWidget {
+  final String imagePath;
+  final IconData icon;
+  final String badge;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
 
-  const _CardContent({
-    required this.service,
-    required this.isActive,
+  const _CinematicTile({
+    required this.imagePath,
+    required this.icon,
+    required this.badge,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
   });
 
   @override
+  State<_CinematicTile> createState() => _CinematicTileState();
+}
+
+class _CinematicTileState extends State<_CinematicTile> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: LayoutBuilder(
-        builder: (context, cardConstraints) {
-          final cardH = cardConstraints.maxHeight;
-          final showIcon = cardH > 280;
-          final showDescription = cardH > 240;
-
-          return Padding(
-            padding: EdgeInsets.all(cardH > 300 ? 24 : 16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTapDown: (_) {
+        HapticFeedback.lightImpact();
+        setState(() => _pressed = true);
+      },
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 162),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryGold.withValues(alpha: 0.1),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              fit: StackFit.expand,
               children: [
-                const Spacer(),
-
-                if (showIcon) ...[
-                  _CardIconBadge(color: service.color, icon: service.icon),
-                  const SizedBox(height: 12),
-                ],
-
-                // Subtitle
-                Text(
-                  service.subtitle.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: service.color,
-                    letterSpacing: 2,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                // Background image
+                Image.asset(
+                  widget.imagePath,
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                  errorBuilder: (_, __, ___) =>
+                      Container(color: AppTheme.card),
                 ),
-
-                const SizedBox(height: 4),
-
-                // Title
-                Text(
-                  service.title,
-                  style: TextStyle(
-                    fontSize: cardH > 350 ? 24 : 20,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: 0.5,
-                    height: 1.2,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                if (showDescription) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    service.description,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppTheme.offWhite.withValues(alpha: 0.8),
-                      height: 1.3,
+                // Dark gradient
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.25),
+                        Colors.black.withValues(alpha: 0.82),
+                      ],
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-
-                const SizedBox(height: 12),
-
-                if (isActive)
-                  _BookNowButton(color: service.color),
+                ),
+                // Gold top stripe
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 3,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.subtleGoldGradient,
+                    ),
+                  ),
+                ),
+                // Content
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Icon + badge row
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(7),
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.subtleGoldGradient,
+                                borderRadius: BorderRadius.circular(9),
+                              ),
+                              child: Icon(
+                                widget.icon,
+                                color: AppTheme.richBlack,
+                                size: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 7),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryGold
+                                    .withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: AppTheme.primaryGold
+                                      .withValues(alpha: 0.4),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                widget.badge,
+                                style: TextStyle(
+                                  color: AppTheme.primaryGold,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          widget.title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.subtitle,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                  fontSize: 10,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            ShaderMask(
+                              shaderCallback: (b) =>
+                                  AppTheme.subtleGoldGradient.createShader(b),
+                              child: const Icon(
+                                Icons.arrow_outward_rounded,
+                                color: Colors.white,
+                                size: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-//  CARD ICON BADGE (extracted widget)
+//  WIDE SERVICE TILE (full-width, horizontal)
 // ─────────────────────────────────────────────────────────────
 
-class _CardIconBadge extends StatelessWidget {
-  final Color color;
+class _WideServiceTile extends StatefulWidget {
   final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
 
-  const _CardIconBadge({required this.color, required this.icon});
+  const _WideServiceTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  State<_WideServiceTile> createState() => _WideServiceTileState();
+}
+
+class _WideServiceTileState extends State<_WideServiceTile> {
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withValues(alpha: 0.8)],
-        ),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+    return GestureDetector(
+      onTapDown: (_) {
+        HapticFeedback.lightImpact();
+        setState(() => _pressed = true);
+      },
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppTheme.card,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppTheme.primaryGold.withValues(alpha: 0.18),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryGold.withValues(alpha: 0.07),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-        ],
+          child: Row(
+            children: [
+              // Gold left accent bar
+              Container(
+                width: 4,
+                height: 72,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.subtleGoldGradient,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    bottomLeft: Radius.circular(20),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Icon with gold gradient
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.subtleGoldGradient,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryGold.withValues(alpha: 0.35),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.star_rounded,
+                  color: AppTheme.richBlack,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Text
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: const TextStyle(
+                        color: AppTheme.softWhite,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      widget.subtitle,
+                      style: TextStyle(
+                        color: AppTheme.offWhite.withValues(alpha: 0.4),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Arrow with gold gradient
+              Padding(
+                padding: const EdgeInsets.only(right: 18),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.subtleGoldGradient,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: AppTheme.richBlack,
+                    size: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-      child: Icon(icon, color: AppTheme.richBlack, size: 24),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-//  BOOK NOW BUTTON (extracted widget)
+//  TAPPABLE WRAPPER
 // ─────────────────────────────────────────────────────────────
 
-class _BookNowButton extends StatelessWidget {
-  final Color color;
+class _Tappable extends StatefulWidget {
+  final VoidCallback onTap;
+  final Widget child;
+  final double radius;
 
-  const _BookNowButton({required this.color});
+  const _Tappable({
+    required this.onTap,
+    required this.child,
+    this.radius = 18,
+  });
+
+  @override
+  State<_Tappable> createState() => _TappableState();
+}
+
+class _TappableState extends State<_Tappable> {
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withValues(alpha: 0.8)],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'BOOK NOW',
-            style: TextStyle(
-              color: AppTheme.richBlack,
-              fontSize: 13,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.5,
-            ),
-          ),
-          SizedBox(width: 6),
-          Icon(
-            Icons.arrow_forward_rounded,
-            color: AppTheme.richBlack,
-            size: 16,
-          ),
-        ],
+    return GestureDetector(
+      onTapDown: (_) {
+        HapticFeedback.lightImpact();
+        setState(() => _pressed = true);
+      },
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
       ),
     );
   }

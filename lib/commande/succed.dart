@@ -137,21 +137,17 @@ class _SuccessPageState extends State<SuccessPage>
 
                   // Success title
                   ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        AppTheme.lightGold,
-                        AppTheme.primaryGold,
-                        AppTheme.accentGold,
-                      ],
-                    ).createShader(bounds),
+                    shaderCallback: (bounds) =>
+                        AppTheme.subtleGoldGradient.createShader(bounds),
                     child: const Text(
-                      'Payment Successful!',
+                      'RÉSERVATION\nCONFIRMÉE',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
                         color: Colors.white,
-                        letterSpacing: -0.5,
+                        letterSpacing: 2,
+                        height: 1.25,
                       ),
                     ),
                   ),
@@ -195,10 +191,10 @@ class _SuccessPageState extends State<SuccessPage>
                             ),
                             const SizedBox(width: 12),
                             const Text(
-                              'Booking Confirmed',
+                              'Commande enregistrée',
                               style: TextStyle(
                                 color: AppTheme.softWhite,
-                                fontSize: 18,
+                                fontSize: 17,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -206,11 +202,12 @@ class _SuccessPageState extends State<SuccessPage>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'You will receive a confirmation email shortly.',
+                          'Un email de confirmation vous sera envoyé dans les plus brefs délais.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: AppTheme.softWhite.withValues(alpha: 0.6),
-                            fontSize: 14,
+                            color: AppTheme.softWhite.withValues(alpha: 0.55),
+                            fontSize: 13,
+                            height: 1.5,
                           ),
                         ),
                       ],
@@ -232,13 +229,14 @@ class _SuccessPageState extends State<SuccessPage>
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        gradient: AppTheme.primaryGoldGradient,
-                        borderRadius: BorderRadius.circular(20),
+                        gradient: AppTheme.subtleGoldGradient,
+                        borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primaryGold.withValues(alpha: 0.4),
+                            color: AppTheme.primaryGold.withValues(alpha: 0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
+                            spreadRadius: -4,
                           ),
                         ],
                       ),

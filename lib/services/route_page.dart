@@ -306,20 +306,15 @@ class RoutePageState extends State<RoutePage> with TickerProviderStateMixin {
           Expanded(
             child: Center(
               child: ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [
-                    AppTheme.lightGold,
-                    AppTheme.primaryGold,
-                    AppTheme.accentGold,
-                  ],
-                ).createShader(bounds),
+                shaderCallback: (bounds) =>
+                    AppTheme.subtleGoldGradient.createShader(bounds),
                 child: Text(
                   Strings.of(context).planJourney,
                   style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
-                    letterSpacing: 1.0,
+                    letterSpacing: 2,
                   ),
                 ),
               ),

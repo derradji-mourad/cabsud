@@ -1,6 +1,6 @@
 flutter_native_splash:
   color: "#000000"                # Background color for the splash screen
-  image: assets/logo/logo5.png          # Path to your logo asset
+  image: assets/logo/splach-logo.png          # Path to your logo asset
   android: true                   # Enable for Android
   ios: true                       # Enable for iOS
   android_gravity: center         # Position logo in the center

@@ -286,7 +286,7 @@ class _TripSummaryPageState extends State<TripSummaryPage>
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text(
-              "Close",
+              "Fermer",
               style: TextStyle(color: AppTheme.primaryGold),
             ),
           )
@@ -309,29 +309,41 @@ class _TripSummaryPageState extends State<TripSummaryPage>
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: const Text(
-        'Trip Summary',
-        style: TextStyle(
-          color: AppTheme.richBlack,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
+      backgroundColor: AppTheme.background,
+      elevation: 0,
+      centerTitle: true,
+      title: ShaderMask(
+        shaderCallback: (b) => AppTheme.subtleGoldGradient.createShader(b),
+        child: const Text(
+          'RÉCAPITULATIF',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            letterSpacing: 3,
+          ),
         ),
       ),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, color: AppTheme.richBlack),
+        icon: Icon(
+          Icons.arrow_back_ios_new,
+          color: AppTheme.primaryGold.withValues(alpha: 0.75),
+          size: 20,
+        ),
         onPressed: () => Navigator.of(context).pop(),
       ),
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppTheme.darkGold,
-              AppTheme.lightGold,
-              AppTheme.accentGold,
-              AppTheme.primaryGold,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.transparent,
+                AppTheme.primaryGold.withValues(alpha: 0.25),
+                Colors.transparent,
+              ],
+            ),
           ),
         ),
       ),
@@ -417,13 +429,13 @@ class _TripSummaryPageState extends State<TripSummaryPage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Your Vehicle',
+                        Text(
+                          'VOTRE VÉHICULE',
                           style: TextStyle(
-                            color: AppTheme.primaryGold,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.2,
+                            color: AppTheme.primaryGold.withValues(alpha: 0.8),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 2,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -457,18 +469,18 @@ class _TripSummaryPageState extends State<TripSummaryPage>
               const _LuxuryDivider(),
               const SizedBox(height: AppTheme.spaceM),
               _InfoRow(
-                  icon: Icons.info_outline, label: 'Description', value: description ?? 'N/A'),
+                  icon: Icons.info_outline, label: 'Catégorie', value: description ?? 'N/A'),
               const SizedBox(height: AppTheme.spaceS),
               Row(
                 children: [
                   Expanded(
                     child: _StatChip(
-                        icon: Icons.people_outline, value: '$passengers', label: 'Passengers'),
+                        icon: Icons.people_outline, value: '$passengers', label: 'Passagers'),
                   ),
                   const SizedBox(width: AppTheme.spaceM),
                   Expanded(
                     child:
-                        _StatChip(icon: Icons.luggage_outlined, value: '$bags', label: 'Bags'),
+                        _StatChip(icon: Icons.luggage_outlined, value: '$bags', label: 'Bagages'),
                   ),
                 ],
               ),
@@ -479,7 +491,7 @@ class _TripSummaryPageState extends State<TripSummaryPage>
                 _InfoRow(icon: Icons.route, label: 'Distance',
                     value: '${distanceKm?.toStringAsFixed(2)} km'),
                 const SizedBox(height: AppTheme.spaceS),
-                _InfoRow(icon: Icons.access_time, label: 'Duration',
+                _InfoRow(icon: Icons.access_time, label: 'Durée',
                     value: '${durationMin?.toStringAsFixed(0)} min'),
               ] else if (origin == 'route') ...[
                 _buildFixedPriceSection(),
@@ -513,13 +525,13 @@ class _TripSummaryPageState extends State<TripSummaryPage>
                 ),
               ),
               const SizedBox(width: AppTheme.spaceM),
-              const Text(
-                'Passenger Information',
+              Text(
+                'INFORMATIONS PASSAGER',
                 style: TextStyle(
-                  color: AppTheme.primaryGold,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
+                  color: AppTheme.primaryGold.withValues(alpha: 0.8),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 2,
                 ),
               ),
             ],
@@ -527,16 +539,16 @@ class _TripSummaryPageState extends State<TripSummaryPage>
           const SizedBox(height: AppTheme.spaceL),
           const _LuxuryDivider(),
           const SizedBox(height: AppTheme.spaceM),
-          _InfoItem(label: "Name",
+          _InfoItem(label: "Nom",
               value: "${widget.tripData['firstName']} ${widget.tripData['lastName']}"),
           if (widget.tripData['companyName'] != null &&
               widget.tripData['companyName'].isNotEmpty)
-            _InfoItem(label: "Company", value: widget.tripData['companyName']),
-          _InfoItem(label: "Address",
+            _InfoItem(label: "Société", value: widget.tripData['companyName']),
+          _InfoItem(label: "Adresse",
               value: "${widget.tripData['address']}, ${widget.tripData['city']}, ${widget.tripData['zipcode']}, ${widget.tripData['region']}"),
-          _InfoItem(label: "Phone", value: widget.tripData['phone']),
+          _InfoItem(label: "Téléphone", value: widget.tripData['phone']),
           _InfoItem(label: "Email", value: widget.tripData['email']),
-          _InfoItem(label: "Date & Time",
+          _InfoItem(label: "Date & Heure",
               value: origin == 'route' ? formattedDateTime1 : (tripDateTime ?? 'N/A')),
         ],
       ),
@@ -551,16 +563,13 @@ class _TripSummaryPageState extends State<TripSummaryPage>
         height: 56,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppTheme.radiusM),
-          gradient: const LinearGradient(
-            colors: [AppTheme.primaryGold, AppTheme.accentGold],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
+          gradient: AppTheme.subtleGoldGradient,
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryGold.withValues(alpha: 0.5),
+              color: AppTheme.primaryGold.withValues(alpha: 0.25),
               blurRadius: 20,
-              offset: const Offset(0, 10),
+              offset: const Offset(0, 8),
+              spreadRadius: -4,
             ),
           ],
         ),
@@ -584,15 +593,15 @@ class _TripSummaryPageState extends State<TripSummaryPage>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.check_circle_outline,
-                            color: AppTheme.richBlack, size: 24),
+                            color: AppTheme.richBlack, size: 22),
                         SizedBox(width: AppTheme.spaceS),
                         Text(
-                          'Confirm Booking',
+                          'CONFIRMER LA RÉSERVATION',
                           style: TextStyle(
                             color: AppTheme.richBlack,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            letterSpacing: 1.5,
                           ),
                         ),
                       ],
@@ -624,12 +633,13 @@ class _TripSummaryPageState extends State<TripSummaryPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Total Price',
+          Text(
+            'PRIX TOTAL',
             style: TextStyle(
-              color: AppTheme.softWhite,
-              fontSize: 16,
+              color: AppTheme.softWhite.withValues(alpha: 0.75),
+              fontSize: 12,
               fontWeight: FontWeight.w600,
+              letterSpacing: 1.5,
             ),
           ),
           Text(
@@ -664,12 +674,13 @@ class _TripSummaryPageState extends State<TripSummaryPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Fixed Price',
+          Text(
+            'PRIX FIXE',
             style: TextStyle(
-              color: AppTheme.softWhite,
-              fontSize: 16,
+              color: AppTheme.softWhite.withValues(alpha: 0.75),
+              fontSize: 12,
               fontWeight: FontWeight.w600,
+              letterSpacing: 1.5,
             ),
           ),
           Text(

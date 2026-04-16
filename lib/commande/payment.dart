@@ -354,15 +354,16 @@ class _PaymentScreenState extends State<PaymentScreen>
               ? LinearGradient(
                   colors: [Colors.grey.shade700, Colors.grey.shade600],
                 )
-              : AppTheme.primaryGoldGradient,
-          borderRadius: BorderRadius.circular(20),
+              : AppTheme.subtleGoldGradient,
+          borderRadius: BorderRadius.circular(18),
           boxShadow: _loading
               ? []
               : [
                   BoxShadow(
-                    color: AppTheme.primaryGold.withValues(alpha: 0.4),
+                    color: AppTheme.primaryGold.withValues(alpha: 0.22),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
+                    spreadRadius: -4,
                   ),
                 ],
         ),
@@ -416,13 +417,14 @@ class _AmountCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: AppTheme.primaryGoldGradient,
+        gradient: AppTheme.subtleGoldGradient,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryGold.withValues(alpha: 0.4),
+            color: AppTheme.primaryGold.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 8),
+            spreadRadius: -4,
           ),
         ],
       ),

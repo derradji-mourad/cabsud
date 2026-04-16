@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../localization/string.dart';
 import 'package:cabsudapp/reuse/theme.dart';
-
-// Removed _LuxuryColors class as we now use AppTheme
 
 class IntroPage4 extends StatefulWidget {
   const IntroPage4({super.key});
@@ -13,6 +12,7 @@ class IntroPage4 extends StatefulWidget {
 
 class _IntroPage4State extends State<IntroPage4>
     with SingleTickerProviderStateMixin {
+  bool _isLanguageLoaded = false;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
@@ -20,9 +20,7 @@ class _IntroPage4State extends State<IntroPage4>
   void initState() {
     super.initState();
     _initializeAnimations();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fadeController.forward();
-    });
+    _loadLanguage();
   }
 
   @override
@@ -34,243 +32,225 @@ class _IntroPage4State extends State<IntroPage4>
   void _initializeAnimations() {
     _fadeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 900),
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOut,
     );
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final selectedLanguage = prefs.getString('language') ?? 'fr';
+    if (!prefs.containsKey('language')) {
+      await prefs.setString('language', selectedLanguage);
+    }
+    Strings.load(selectedLanguage);
+    if (mounted) {
+      setState(() => _isLanguageLoaded = true);
+      _fadeController.forward();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final imageSize = screenSize.width * 0.55;
-    final titleFontSize = screenSize.width * 0.068;
-    final descriptionFontSize = screenSize.width * 0.042;
+    if (!_isLanguageLoaded) {
+      return const Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Center(child: _LuxuryLoadingIndicator()),
+      );
+    }
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Colors.black,
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppTheme.background,
-                AppTheme.card,
-                AppTheme.background,
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.symmetric(
-                  horizontal: screenSize.width * 0.05,
-                  vertical: screenSize.height * 0.03,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _LuxuryImageCard(
-                      imagePath: 'assets/intro/gare_transport.jpg',
-                      size: imageSize,
-                      cacheSize: (imageSize * devicePixelRatio).round(),
-                    ),
-                    SizedBox(height: screenSize.height * 0.05),
-                    _LuxuryTitle(
-                      text: Strings.of(context).trainTransferTitle,
-                      fontSize: titleFontSize,
-                    ),
-                    SizedBox(height: screenSize.height * 0.03),
-                    _LuxuryDescriptionCard(
-                      text: Strings.of(context).trainTransferDescription,
-                      fontSize: descriptionFontSize,
-                      horizontalPadding: screenSize.width * 0.08,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+        child: _CinematicIntroLayout(
+          imagePath: 'assets/intro/gare_transport.jpg',
+          badge: 'GARE',
+          title: Strings.of(context).trainTransferTitle,
+          description: Strings.of(context).trainTransferDescription,
         ),
       ),
     );
   }
 }
 
-class _LuxuryImageCard extends StatelessWidget {
+class _CinematicIntroLayout extends StatelessWidget {
   final String imagePath;
-  final double size;
-  final int cacheSize;
+  final String badge;
+  final String title;
+  final String description;
 
-  const _LuxuryImageCard({
+  const _CinematicIntroLayout({
     required this.imagePath,
-    required this.size,
-    required this.cacheSize,
+    required this.badge,
+    required this.title,
+    required this.description,
   });
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: FutureBuilder(
-        future: precacheImage(AssetImage(imagePath), context),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                gradient: const LinearGradient(
-                  colors: [
-                    AppTheme.secondary,
-                    AppTheme.primary,
-                    AppTheme.primary,
-                    AppTheme.accent,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
-                    spreadRadius: -4,
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    blurRadius: 32,
-                    offset: const Offset(0, 16),
-                    spreadRadius: -8,
-                  ),
+    final screenH = MediaQuery.of(context).size.height;
+    final screenW = MediaQuery.of(context).size.width;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          imagePath,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            color: AppTheme.card,
+            child: const Center(
+              child: Icon(Icons.train_rounded, size: 80, color: AppTheme.primaryGold),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 0, left: 0, right: 0,
+          height: screenH * 0.65,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  AppTheme.background.withValues(alpha: 0.72),
+                  AppTheme.background.withValues(alpha: 0.94),
+                  AppTheme.background,
+                ],
+                stops: const [0.0, 0.3, 0.55, 1.0],
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 0, left: 0, right: 0, height: 110,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.55),
+                  Colors.transparent,
                 ],
               ),
-              padding: const EdgeInsets.all(3.5),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20.5),
-                child: Image.asset(
-                  imagePath,
-                  width: size,
-                  height: size,
-                  fit: BoxFit.cover,
-                  cacheWidth: cacheSize,
-                  cacheHeight: cacheSize,
+            ),
+          ),
+        ),
+        Positioned(
+          top: 0, left: 0, right: 0,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 18, 28, 0),
+              child: ShaderMask(
+                shaderCallback: (b) =>
+                    AppTheme.subtleGoldGradient.createShader(b),
+                child: const Text(
+                  'CABSUD',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 4,
+                  ),
                 ),
               ),
-            );
-          }
-          return Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: AppTheme.card,
-              borderRadius: BorderRadius.circular(24),
             ),
-            child: const Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+          ),
+        ),
+        Positioned(
+          bottom: 160,
+          left: 28,
+          right: 28,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                      color: AppTheme.primaryGold.withValues(alpha: 0.5)),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  badge,
+                  style: const TextStyle(
+                    color: AppTheme.primaryGold,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2.5,
+                  ),
+                ),
               ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _LuxuryTitle extends StatelessWidget {
-  final String text;
-  final double fontSize;
-
-  const _LuxuryTitle({required this.text, required this.fontSize});
-
-  @override
-  Widget build(BuildContext context) {
-    return ShaderMask(
-      shaderCallback: (bounds) => const LinearGradient(
-        colors: [
-          AppTheme.primary,
-          AppTheme.accent,
-          AppTheme.primary,
-        ],
-      ).createShader(bounds),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-          letterSpacing: 1.2,
-          height: 1.3,
-        ),
-      ),
-    );
-  }
-}
-
-class _LuxuryDescriptionCard extends StatelessWidget {
-  final String text;
-  final double fontSize;
-  final double horizontalPadding;
-
-  const _LuxuryDescriptionCard({
-    required this.text,
-    required this.fontSize,
-    required this.horizontalPadding,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: const LinearGradient(
-            colors: [
-              AppTheme.secondary,
-              AppTheme.primary,
-              AppTheme.primary,
-              AppTheme.accent,
+              const SizedBox(height: 14),
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenW * 0.072,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                  height: 1.15,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                description,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.70),
+                  fontSize: 15,
+                  height: 1.65,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.primary.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-              spreadRadius: -4,
-            ),
-          ],
         ),
-        padding: const EdgeInsets.all(3.5),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16.5),
-            color: AppTheme.background,
-          ),
-          child: Text(
-            text,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: fontSize,
-              color: Colors.white.withValues(alpha: 0.9),
-              height: 1.6,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.3,
+      ],
+    );
+  }
+}
+
+class _LuxuryLoadingIndicator extends StatelessWidget {
+  const _LuxuryLoadingIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 36,
+          height: 36,
+          child: CircularProgressIndicator(
+            strokeWidth: 1.5,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              AppTheme.primaryGold.withValues(alpha: 0.7),
             ),
           ),
         ),
-      ),
+        const SizedBox(height: 20),
+        Text(
+          'CHARGEMENT...',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 3,
+            color: AppTheme.primaryGold.withValues(alpha: 0.6),
+          ),
+        ),
+      ],
     );
   }
 }

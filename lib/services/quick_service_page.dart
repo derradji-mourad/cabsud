@@ -1323,20 +1323,15 @@ class _LuxuryAppBar extends StatelessWidget {
           Expanded(
             child: Center(
               child: ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [
-                    AppTheme.lightGold,
-                    AppTheme.primaryGold,
-                    AppTheme.accentGold,
-                  ],
-                ).createShader(bounds),
+                shaderCallback: (bounds) =>
+                    AppTheme.subtleGoldGradient.createShader(bounds),
                 child: Text(
                   Strings.of(context).quickServiceTitle,
                   style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
-                    letterSpacing: 0.8,
+                    letterSpacing: 2,
                   ),
                 ),
               ),

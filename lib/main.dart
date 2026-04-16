@@ -190,9 +190,8 @@ class _AppLoadingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [AppTheme.lightGold, AppTheme.primaryGold],
-                ).createShader(bounds),
+                shaderCallback: (bounds) =>
+                    AppTheme.subtleGoldGradient.createShader(bounds),
                 child: const Text(
                   'CABSUD',
                   style: TextStyle(

@@ -62,7 +62,17 @@ dependencies:
 flutter_launcher_icons:
     android: "launcher_icon"
     ios: true
-    image_path: "assets/logo/logo4.png"
+    image_path: "assets/logo/splach-logo.png"
+
+flutter_native_splash:
+  color: "#010817"
+  image: "assets/logo/splach-logo.png"
+  android_12:
+    image: "assets/logo/splach-logo.png"
+    icon_background_color: "#010817"
+    color: "#010817"
+  android: true
+  ios: true
 
 
 dev_dependencies:

@@ -614,20 +614,15 @@ class _LuxuryAppBar extends StatelessWidget implements PreferredSizeWidget {
         onPressed: onBack,
       ),
       title: ShaderMask(
-        shaderCallback: (bounds) => const LinearGradient(
-          colors: [
-            AppTheme.secondary,
-            AppTheme.primary,
-            AppTheme.primary,
-          ],
-        ).createShader(bounds),
+        shaderCallback: (bounds) =>
+            AppTheme.subtleGoldGradient.createShader(bounds),
         child: Text(
           title,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 2,
           ),
         ),
       ),

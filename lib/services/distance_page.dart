@@ -1215,13 +1215,8 @@ class _LuxuryAppBar extends StatelessWidget {
           Expanded(
             child: Center(
               child: ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [
-                    AppTheme.lightGold,
-                    AppTheme.primaryGold,
-                    AppTheme.accentGold,
-                  ],
-                ).createShader(bounds),
+                shaderCallback: (bounds) =>
+                    AppTheme.subtleGoldGradient.createShader(bounds),
                 child: Text(
                   Strings.of(context).saisissezVotreAdresse,
                   style: const TextStyle(

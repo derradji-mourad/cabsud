@@ -207,8 +207,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         controller: _pageController,
         count: _totalPages,
         effect: ExpandingDotsEffect(
-          activeDotColor: AppTheme.primary,
-          dotColor: AppTheme.secondary.withValues(alpha: 0.3),
+          activeDotColor: AppTheme.primaryGold,
+          dotColor: AppTheme.offWhite.withValues(alpha: 0.25),
           dotHeight: 10,
           dotWidth: 10,
           expansionFactor: 4,
@@ -287,22 +287,22 @@ class _LuxuryTextButtonState extends State<_LuxuryTextButton> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: _isPressed
-              ? AppTheme.secondary.withValues(alpha: 0.1)
+              ? AppTheme.primaryGold.withValues(alpha: 0.08)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: _isPressed
-                ? AppTheme.secondary.withValues(alpha: 0.3)
+                ? AppTheme.primaryGold.withValues(alpha: 0.25)
                 : Colors.transparent,
-            width: 1.5,
+            width: 1,
           ),
         ),
         child: Text(
           widget.label,
           style: TextStyle(
             color: _isPressed
-                ? AppTheme.primary
-                : Colors.white.withValues(alpha: 0.7),
+                ? AppTheme.primaryGold
+                : Colors.white.withValues(alpha: 0.5),
             fontSize: 15,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
@@ -352,29 +352,22 @@ class _LuxuryPrimaryButtonState extends State<_LuxuryPrimaryButton> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                AppTheme.darkGold,
-                AppTheme.primary,
-                AppTheme.accent,
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
+            gradient: AppTheme.subtleGoldGradient,
             borderRadius: BorderRadius.circular(16),
             boxShadow: _isPressed
                 ? [
                     BoxShadow(
-                      color: AppTheme.secondary.withValues(alpha: 0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 6),
+                      color: AppTheme.primaryGold.withValues(alpha: 0.18),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ]
                 : [
                     BoxShadow(
-                      color: AppTheme.secondary.withValues(alpha: 0.5),
-                      blurRadius: 24,
-                      offset: const Offset(0, 12),
+                      color: AppTheme.primaryGold.withValues(alpha: 0.28),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                      spreadRadius: -4,
                     ),
                   ],
           ),

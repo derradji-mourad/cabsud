@@ -165,9 +165,8 @@ class _ServiceSelectionPageState extends State<ServiceSelectionPage>
           ),
           const Spacer(),
           ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [AppTheme.lightGold, AppTheme.primaryGold],
-            ).createShader(bounds),
+            shaderCallback: (bounds) =>
+                AppTheme.subtleGoldGradient.createShader(bounds),
             child: const Icon(
               Icons.directions_car_rounded,
               size: 32,
@@ -186,9 +185,8 @@ class _ServiceSelectionPageState extends State<ServiceSelectionPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [AppTheme.lightGold, AppTheme.primaryGold],
-            ).createShader(bounds),
+            shaderCallback: (bounds) =>
+                AppTheme.subtleGoldGradient.createShader(bounds),
             child: Text(
               Strings.of(context).selectService,
               style: const TextStyle(

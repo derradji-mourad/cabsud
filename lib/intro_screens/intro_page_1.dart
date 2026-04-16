@@ -4,9 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../localization/string.dart';
 import 'package:cabsudapp/reuse/theme.dart';
 
-/// Luxury color palette
-// Removed _LuxuryColors class as we now use AppTheme
-
 class IntroPage1 extends StatefulWidget {
   const IntroPage1({super.key});
 
@@ -36,10 +33,11 @@ class _IntroPage1State extends State<IntroPage1>
   void _initializeAnimations() {
     _fadeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 900),
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOut,
     );
   }
 
@@ -70,7 +68,7 @@ class _IntroPage1State extends State<IntroPage1>
       context: context,
       barrierDismissible: false,
       barrierLabel: 'Language Selection',
-      barrierColor: Colors.black87,
+      barrierColor: Colors.black.withValues(alpha: 0.85),
       transitionDuration: const Duration(milliseconds: 350),
       pageBuilder: (context, animation, secondaryAnimation) =>
           const SizedBox.shrink(),
@@ -78,7 +76,7 @@ class _IntroPage1State extends State<IntroPage1>
         return FadeTransition(
           opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
           child: ScaleTransition(
-            scale: Tween<double>(begin: 0.85, end: 1.0).animate(
+            scale: Tween<double>(begin: 0.88, end: 1.0).animate(
               CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
             ),
             child: _LanguageDialog(
@@ -108,95 +106,185 @@ class _IntroPage1State extends State<IntroPage1>
       );
     }
 
-    final screenSize = MediaQuery.of(context).size;
-    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final imageSize = screenSize.width * 0.55;
-    final titleFontSize = screenSize.width * 0.068;
-    final descriptionFontSize = screenSize.width * 0.042;
-
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Colors.black,
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppTheme.background,
-                AppTheme.card,
-                AppTheme.background,
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.symmetric(
-                  horizontal: screenSize.width * 0.05,
-                  vertical: screenSize.height * 0.03,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _LuxuryImageCard(
-                      imagePath: 'assets/intro/intro.jpg',
-                      size: imageSize,
-                      cacheSize: (imageSize * devicePixelRatio).round(),
-                    ),
-                    SizedBox(height: screenSize.height * 0.05),
-                    _LuxuryTitle(
-                      text: Strings.of(context).appTitle,
-                      fontSize: titleFontSize,
-                    ),
-                    SizedBox(height: screenSize.height * 0.03),
-                    _LuxuryDescriptionCard(
-                      text: Strings.of(context).descriptionText,
-                      fontSize: descriptionFontSize,
-                      horizontalPadding: screenSize.width * 0.08,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+        child: _CinematicIntroLayout(
+          imagePath: 'assets/intro/intro.jpg',
+          badge: 'PREMIUM SERVICE',
+          title: Strings.of(context).appTitle,
+          description: Strings.of(context).descriptionText,
         ),
       ),
     );
   }
 }
 
-class _LuxuryLoadingIndicator extends StatelessWidget {
-  const _LuxuryLoadingIndicator();
+// ─────────────────────────────────────────────────────────────────────────────
+//  CINEMATIC FULL-SCREEN LAYOUT (shared by all intro pages)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CinematicIntroLayout extends StatelessWidget {
+  final String imagePath;
+  final String badge;
+  final String title;
+  final String description;
+
+  const _CinematicIntroLayout({
+    required this.imagePath,
+    required this.badge,
+    required this.title,
+    required this.description,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    final screenH = MediaQuery.of(context).size.height;
+    final screenW = MediaQuery.of(context).size.width;
+
+    return Stack(
+      fit: StackFit.expand,
       children: [
-        const SizedBox(
-          width: 50,
-          height: 50,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.5,
-            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+        // ── Background image ──────────────────────────────────────────────────
+        Image.asset(
+          imagePath,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            color: AppTheme.card,
+            child: const Center(
+              child: Icon(Icons.directions_car_rounded,
+                  size: 80, color: AppTheme.primaryGold),
+            ),
           ),
         ),
-        const SizedBox(height: 24),
-        ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [AppTheme.secondary, AppTheme.primary],
-          ).createShader(bounds),
-          child: const Text(
-            'CHARGEMENT...',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 2.5,
-              color: Colors.white,
+
+        // ── Bottom gradient overlay ───────────────────────────────────────────
+        Positioned(
+          bottom: 0, left: 0, right: 0,
+          height: screenH * 0.65,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  AppTheme.background.withValues(alpha: 0.72),
+                  AppTheme.background.withValues(alpha: 0.94),
+                  AppTheme.background,
+                ],
+                stops: const [0.0, 0.3, 0.55, 1.0],
+              ),
             ),
+          ),
+        ),
+
+        // ── Top gradient (status bar legibility) ─────────────────────────────
+        Positioned(
+          top: 0, left: 0, right: 0,
+          height: 110,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.55),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // ── Top brand bar ─────────────────────────────────────────────────────
+        Positioned(
+          top: 0, left: 0, right: 0,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 18, 28, 0),
+              child: Row(
+                children: [
+                  ShaderMask(
+                    shaderCallback: (b) =>
+                        AppTheme.subtleGoldGradient.createShader(b),
+                    child: const Text(
+                      'CABSUD',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // ── Bottom content ───────────────────────────────────────────────────
+        Positioned(
+          bottom: 160, // leave room for OnboardingScreen controls
+          left: 28,
+          right: 28,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Service badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: AppTheme.primaryGold.withValues(alpha: 0.5),
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  badge,
+                  style: const TextStyle(
+                    color: AppTheme.primaryGold,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Title
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenW * 0.072,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                  height: 1.15,
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Description
+              Text(
+                description,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.70),
+                  fontSize: 15,
+                  height: 1.65,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0.1,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -204,181 +292,12 @@ class _LuxuryLoadingIndicator extends StatelessWidget {
   }
 }
 
-class _LuxuryImageCard extends StatelessWidget {
-  final String imagePath;
-  final double size;
-  final int cacheSize;
-
-  const _LuxuryImageCard({
-    required this.imagePath,
-    required this.size,
-    required this.cacheSize,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: FutureBuilder(
-        future: precacheImage(AssetImage(imagePath), context),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                gradient: const LinearGradient(
-                  colors: [
-                    AppTheme.secondary,
-                    AppTheme.primary,
-                    AppTheme.primary,
-                    AppTheme.accent,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
-                    spreadRadius: -4,
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    blurRadius: 32,
-                    offset: const Offset(0, 16),
-                    spreadRadius: -8,
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(3.5),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20.5),
-                child: Image.asset(
-                  imagePath,
-                  width: size,
-                  height: size,
-                  fit: BoxFit.cover,
-                  cacheWidth: cacheSize,
-                  cacheHeight: cacheSize,
-                ),
-              ),
-            );
-          }
-          return Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: AppTheme.card,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: const Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _LuxuryTitle extends StatelessWidget {
-  final String text;
-  final double fontSize;
-
-  const _LuxuryTitle({required this.text, required this.fontSize});
-
-  @override
-  Widget build(BuildContext context) {
-    return ShaderMask(
-      shaderCallback: (bounds) => const LinearGradient(
-        colors: [
-          AppTheme.primary,
-          AppTheme.accent,
-          AppTheme.primary,
-        ],
-      ).createShader(bounds),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-          letterSpacing: 1.2,
-          height: 1.3,
-        ),
-      ),
-    );
-  }
-}
-
-class _LuxuryDescriptionCard extends StatelessWidget {
-  final String text;
-  final double fontSize;
-  final double horizontalPadding;
-
-  const _LuxuryDescriptionCard({
-    required this.text,
-    required this.fontSize,
-    required this.horizontalPadding,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: const LinearGradient(
-            colors: [
-              AppTheme.secondary,
-              AppTheme.primary,
-              AppTheme.primary,
-              AppTheme.accent,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.primary.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-              spreadRadius: -4,
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(3.5),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16.5),
-            color: AppTheme.background,
-          ),
-          child: Text(
-            text,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: fontSize,
-              color: Colors.white.withValues(alpha: 0.9),
-              height: 1.6,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+// ─────────────────────────────────────────────────────────────────────────────
+//  LANGUAGE DIALOG
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _LanguageDialog extends StatefulWidget {
   final ValueChanged<String> onLanguageSelected;
-
   const _LanguageDialog({required this.onLanguageSelected});
 
   @override
@@ -397,14 +316,19 @@ class _LanguageDialogState extends State<_LanguageDialog> {
           color: AppTheme.card,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: AppTheme.primary.withValues(alpha: 0.3),
-            width: 2,
+            color: AppTheme.primaryGold.withValues(alpha: 0.2),
+            width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primary.withValues(alpha: 0.2),
-              blurRadius: 30,
-              offset: const Offset(0, 15),
+              color: AppTheme.primaryGold.withValues(alpha: 0.12),
+              blurRadius: 40,
+              offset: const Offset(0, 20),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 60,
+              offset: const Offset(0, 30),
             ),
           ],
         ),
@@ -412,88 +336,136 @@ class _LanguageDialogState extends State<_LanguageDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Gold line accent
+            Container(
+              width: 36,
+              height: 2,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                gradient: AppTheme.subtleGoldGradient,
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
             ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [AppTheme.secondary, AppTheme.primary],
-              ).createShader(bounds),
+              shaderCallback: (b) =>
+                  AppTheme.subtleGoldGradient.createShader(b),
               child: const Text(
                 'CHOISIR LA LANGUE',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 2.5,
                 ),
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Select your preferred language',
+              style: TextStyle(
+                color: AppTheme.foreground.withValues(alpha: 0.45),
+                fontSize: 13,
+              ),
+            ),
             const SizedBox(height: 28),
-            _buildLanguageButton('English', 'en', '🇬🇧'),
-            const SizedBox(height: 16),
-            _buildLanguageButton('Français', 'fr', '🇫🇷'),
+            _buildLanguageOption('English', 'en', '🇬🇧'),
+            const SizedBox(height: 12),
+            _buildLanguageOption('Français', 'fr', '🇫🇷'),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLanguageButton(String label, String languageCode, String icon) {
-    final isHovered = _hoveredLanguage == languageCode;
-
+  Widget _buildLanguageOption(String label, String code, String flag) {
+    final isSelected = _hoveredLanguage == code;
     return MouseRegion(
-      onEnter: (_) => setState(() => _hoveredLanguage = languageCode),
+      onEnter: (_) => setState(() => _hoveredLanguage = code),
       onExit: (_) => setState(() => _hoveredLanguage = null),
       child: GestureDetector(
-        onTapDown: (_) => HapticFeedback.lightImpact(),
-        onTap: () => widget.onLanguageSelected(languageCode),
+        onTapDown: (_) {
+          HapticFeedback.lightImpact();
+          setState(() => _hoveredLanguage = code);
+        },
+        onTap: () => widget.onLanguageSelected(code),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isHovered
-                  ? [
-                      AppTheme.secondary,
-                      AppTheme.primary,
-                      AppTheme.accent,
-                    ]
-                  : [
-                      AppTheme.secondary.withValues(alpha: 0.8),
-                      AppTheme.primary.withValues(alpha: 0.8),
-                      AppTheme.accent.withValues(alpha: 0.8),
+            gradient: isSelected
+                ? AppTheme.subtleGoldGradient
+                : LinearGradient(
+                    colors: [
+                      AppTheme.muted,
+                      AppTheme.muted.withValues(alpha: 0.8),
                     ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
+                  ),
             borderRadius: BorderRadius.circular(14),
-            boxShadow: isHovered
-                ? [
-                    BoxShadow(
-                      color: AppTheme.primary.withValues(alpha: 0.4),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ]
-                : null,
+            border: Border.all(
+              color: isSelected
+                  ? AppTheme.primaryGold.withValues(alpha: 0.6)
+                  : AppTheme.border,
+              width: 1,
+            ),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(icon, style: const TextStyle(fontSize: 24)),
-              const SizedBox(width: 12),
+              Text(flag, style: const TextStyle(fontSize: 22)),
+              const SizedBox(width: 14),
               Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w700,
+                style: TextStyle(
+                  color: isSelected ? Colors.black87 : AppTheme.foreground,
+                  fontWeight: FontWeight.w600,
                   fontSize: 16,
-                  letterSpacing: 0.8,
+                  letterSpacing: 0.3,
                 ),
               ),
+              const Spacer(),
+              if (isSelected)
+                const Icon(Icons.check_rounded, color: Colors.black87, size: 18),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  LOADING INDICATOR
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _LuxuryLoadingIndicator extends StatelessWidget {
+  const _LuxuryLoadingIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 36,
+          height: 36,
+          child: CircularProgressIndicator(
+            strokeWidth: 1.5,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              AppTheme.primaryGold.withValues(alpha: 0.7),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'CHARGEMENT...',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 3,
+            color: AppTheme.primaryGold.withValues(alpha: 0.6),
+          ),
+        ),
+      ],
     );
   }
 }

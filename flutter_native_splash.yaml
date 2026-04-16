@@ -1,7 +1,7 @@
 flutter_native_splash:
   color: "#010817"
-  image: assets/logo/logo4.png
+  image: assets/logo/splach-logo.png
   android_12:
-    image: assets/logo/logo4.png
+    image: assets/logo/splach-logo.png
     color: "#010817"
   web: false
