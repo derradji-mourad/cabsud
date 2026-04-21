@@ -49,7 +49,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
   final ValueNotifier<int> _currentStepNotifier = ValueNotifier(0);
   final ValueNotifier<bool> _isCalculatingNotifier = ValueNotifier(false);
 
-  Timer? _debounceTimer;
+  Timer? _pickupDebounce;
+  Timer? _destinationDebounce;
   Timer? _routeDrawDebounce;
   String? _lastDrawnPickup;
   String? _lastDrawnDestination;
@@ -115,7 +116,8 @@ class DistanceCalculatorState extends State<DistanceCalculator>
     _pickupController.dispose();
     _destinationController.dispose();
     _mapController?.dispose();
-    _debounceTimer?.cancel();
+    _pickupDebounce?.cancel();
+    _destinationDebounce?.cancel();
     _routeDrawDebounce?.cancel();
     _fadeController.dispose();
     _pulseController.dispose();
@@ -192,45 +194,53 @@ class DistanceCalculatorState extends State<DistanceCalculator>
   }
 
   void _onAddressChanged(String query, bool isPickup) {
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 400), () {
-      _fetchAddressSuggestions(query, isPickup);
-    });
+    if (isPickup) {
+      _pickupDebounce?.cancel();
+      _pickupDebounce = Timer(const Duration(milliseconds: 400), () {
+        _fetchAddressSuggestions(query, isPickup: true);
+      });
+    } else {
+      _destinationDebounce?.cancel();
+      _destinationDebounce = Timer(const Duration(milliseconds: 400), () {
+        _fetchAddressSuggestions(query, isPickup: false);
+      });
+    }
   }
 
-  Future<void> _fetchAddressSuggestions(String query, bool isPickup) async {
-    if (query.isEmpty) {
-      if (isPickup) {
-        _pickupSuggestionsNotifier.value = [];
-      } else {
-        _destinationSuggestionsNotifier.value = [];
-      }
+  Future<void> _fetchAddressSuggestions(
+    String query, {
+    required bool isPickup,
+  }) async {
+    final notifier = isPickup
+        ? _pickupSuggestionsNotifier
+        : _destinationSuggestionsNotifier;
+
+    if (query.trim().length < 3) {
+      notifier.value = [];
       return;
     }
 
     try {
-      final url = Uri.parse(
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json'
-        '?input=${Uri.encodeComponent(query)}'
-        '&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}'
-        '&components=country:fr'
-        '&language=fr',
+      final response = await http.post(
+        Uri.parse(
+          'https://utypxmgyfqfwlkpkqrff.supabase.co/functions/v1/autocomplete',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${dotenv.env['SUPABASE_ANON_KEY']}',
+        },
+        body: jsonEncode({'input': query.trim()}),
       );
-
-      final response = await http.get(url);
       if (response.statusCode == 200) {
-        final suggestions = await parseAddressSuggestions(response.body);
-
-        if (mounted) {
-          if (isPickup) {
-            _pickupSuggestionsNotifier.value = suggestions;
-          } else {
-            _destinationSuggestionsNotifier.value = suggestions;
-          }
-        }
+        final suggestions = await parsePlacesV1Suggestions(response.body);
+        if (mounted) notifier.value = suggestions;
+      } else {
+        debugPrint(
+          'Autocomplete error ${response.statusCode}: ${response.body}',
+        );
       }
     } catch (e) {
-      debugPrint('Error fetching suggestions: $e');
+      debugPrint('Autocomplete exception: $e');
     }
   }
 
@@ -317,34 +327,41 @@ class DistanceCalculatorState extends State<DistanceCalculator>
       final destinationLatLng =
           LatLng(coordinates[1]['lat']!, coordinates[1]['lon']!);
 
-      final directionsUrl = Uri.parse(
-        'https://maps.googleapis.com/maps/api/directions/json'
-        '?origin=${coordinates[0]['lat']},${coordinates[0]['lon']}'
-        '&destination=${coordinates[1]['lat']},${coordinates[1]['lon']}'
-        '&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}',
+      final response = await http.post(
+        Uri.parse(
+          'https://utypxmgyfqfwlkpkqrff.supabase.co/functions/v1/route-drawing',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${dotenv.env['SUPABASE_ANON_KEY']}',
+        },
+        body: jsonEncode({
+          'originLat': coordinates[0]['lat'],
+          'originLng': coordinates[0]['lon'],
+          'destLat': coordinates[1]['lat'],
+          'destLng': coordinates[1]['lon'],
+        }),
       );
+      if (response.statusCode != 200) {
+        debugPrint(
+            'route-drawing error ${response.statusCode}: ${response.body}');
+        return;
+      }
+      final routeData = await parseRoutesV2Data(response.body);
+      final encodedPolyline = routeData['encodedPolyline'] as String;
+      if (encodedPolyline.isEmpty) {
+        debugPrint('route-drawing returned empty polyline: ${response.body}');
+      } else {
+        final distanceKm = routeData['distance_km'] as double;
+        final durationMin = routeData['duration_min'] as double;
+        _distanceNotifier.value = '${distanceKm.toStringAsFixed(1)} km';
+        _durationNotifier.value = '${durationMin.round()} min';
 
-      final response = await http.get(directionsUrl);
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == 'OK') {
-          final route = data['routes'][0];
-          final legs = route['legs'] as List?;
-          if (legs != null && legs.isNotEmpty) {
-            final leg = legs.first;
-            _distanceNotifier.value =
-                (leg['distance']?['text'] as String?) ?? '';
-            _durationNotifier.value =
-                (leg['duration']?['text'] as String?) ?? '';
-          }
-          final polylineEncoded = route['overview_polyline']['points'];
-          final decodedPoints = _polylinePoints.decodePolyline(polylineEncoded);
-          final routeCoordinates = decodedPoints
-              .map((point) => LatLng(point.latitude, point.longitude))
-              .toList();
-
-          _animateRoute(routeCoordinates, pickupLatLng, destinationLatLng);
-        }
+        final decodedPoints = _polylinePoints.decodePolyline(encodedPolyline);
+        final routeCoordinates = decodedPoints
+            .map((point) => LatLng(point.latitude, point.longitude))
+            .toList();
+        _animateRoute(routeCoordinates, pickupLatLng, destinationLatLng);
       }
     } catch (e) {
       debugPrint('Error drawing route: $e');
@@ -453,21 +470,28 @@ class DistanceCalculatorState extends State<DistanceCalculator>
   }
 
   Future<Map<String, double>> _getCoordinatesForAddress(String address) async {
-    final url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/geocode/json'
-      '?address=${Uri.encodeComponent(address)}'
-      '&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}',
+    final response = await http.post(
+      Uri.parse(
+        'https://utypxmgyfqfwlkpkqrff.supabase.co/functions/v1/geocode-address',
+      ),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${dotenv.env['SUPABASE_ANON_KEY']}',
+      },
+      body: jsonEncode({'address': address}),
     );
 
-    final response = await http.get(url);
     if (response.statusCode == 200) {
       final data = await parseJsonMap(response.body);
       if (data['status'] == 'OK') {
         final location = data['results'][0]['geometry']['location'];
         return {'lat': location['lat'], 'lon': location['lng']};
       }
+      debugPrint('Geocode status not OK: ${data['status']}');
+    } else {
+      debugPrint('Geocode error ${response.statusCode}: ${response.body}');
     }
-    throw Exception('Failed to geocode address');
+    throw Exception('Failed to geocode address: ${response.statusCode}');
   }
 
   Future<void> _saveTripDetails() async {

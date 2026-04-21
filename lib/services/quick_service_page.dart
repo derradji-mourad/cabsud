@@ -257,16 +257,15 @@ class QuickServicePageState extends State<QuickServicePage>
     final amountInCents = ((fare['totalFare'] as num) * 100).toInt();
 
     final intentResponse = await http.post(
-      Uri.parse('https://api.stripe.com/v1/payment_intents'),
-      headers: {
-        'Authorization': 'Bearer ${dotenv.env['STRIPE_SECRET_KEY']}',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: {
-        'amount': amountInCents.toString(),
+      Uri.parse(
+        'https://utypxmgyfqfwlkpkqrff.supabase.co/functions/v1/create-payment-intent',
+      ),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'amount': amountInCents,
         'currency': 'eur',
-        'payment_method_types[]': 'card',
-      },
+        'name': _nameController.text.trim(),
+      }),
     );
 
     if (intentResponse.statusCode != 200) {
@@ -275,9 +274,9 @@ class QuickServicePageState extends State<QuickServicePage>
     }
 
     final intentData = await parseJsonMap(intentResponse.body);
-    final clientSecret = intentData['client_secret'] as String?;
+    final clientSecret = intentData['clientSecret'] as String?;
     if (clientSecret == null) {
-      throw Exception('PaymentIntent response missing client_secret');
+      throw Exception('PaymentIntent response missing clientSecret');
     }
 
     await Stripe.instance.confirmPayment(
@@ -1147,17 +1146,19 @@ class QuickServicePageState extends State<QuickServicePage>
     }
 
     try {
-      final response = await http.get(
+      final response = await http.post(
         Uri.parse(
-          'https://maps.googleapis.com/maps/api/place/autocomplete/json'
-          '?input=$query'
-          '&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}'
-          '&sessiontoken=${DateTime.now().millisecondsSinceEpoch}',
+          'https://utypxmgyfqfwlkpkqrff.supabase.co/functions/v1/autocomplete',
         ),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${dotenv.env['SUPABASE_ANON_KEY']}',
+        },
+        body: jsonEncode({'input': query}),
       );
 
       if (response.statusCode == 200) {
-        final suggestions = await parseAddressSuggestions(response.body);
+        final suggestions = await parsePlacesV1Suggestions(response.body);
 
         if (isPickup) {
           _pickupSuggestionsNotifier.value = suggestions;
@@ -1217,24 +1218,29 @@ class QuickServicePageState extends State<QuickServicePage>
 
       // Fetch route in a separate try-catch to ensure markers persist
       try {
-        final directionsUrl = Uri.parse(
-          'https://maps.googleapis.com/maps/api/directions/json'
-          '?origin=${pickupLatLng.latitude},${pickupLatLng.longitude}'
-          '&destination=${dropoffLatLng.latitude},${dropoffLatLng.longitude}'
-          '&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}',
+        final response = await http.post(
+          Uri.parse(
+            'https://utypxmgyfqfwlkpkqrff.supabase.co/functions/v1/route-drawing',
+          ),
+          headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${dotenv.env['SUPABASE_ANON_KEY']}',
+        },
+          body: jsonEncode({
+            'originLat': pickupLatLng.latitude,
+            'originLng': pickupLatLng.longitude,
+            'destLat': dropoffLatLng.latitude,
+            'destLng': dropoffLatLng.longitude,
+          }),
         );
-
-        final response = await http.get(directionsUrl);
         if (response.statusCode == 200) {
-          final data = await parseJsonMap(response.body);
-          if (data['status'] == 'OK') {
-            final polylineEncoded =
-                data['routes'][0]['overview_polyline']['points'];
-            final result = _polylinePoints.decodePolyline(polylineEncoded);
+          final routeData = await parseRoutesV2Data(response.body);
+          final encodedPolyline = routeData['encodedPolyline'] as String;
+          if (encodedPolyline.isNotEmpty) {
+            final result = _polylinePoints.decodePolyline(encodedPolyline);
             final routeCoordinates = result
                 .map((point) => LatLng(point.latitude, point.longitude))
                 .toList();
-
             _polylinesNotifier.value = {
               Polyline(
                 polylineId: const PolylineId('route'),
@@ -1243,8 +1249,6 @@ class QuickServicePageState extends State<QuickServicePage>
                 width: 5,
               ),
             };
-          } else {
-            debugPrint('Directions API error: ${data['status']}');
           }
         }
       } catch (e) {
@@ -1311,21 +1315,28 @@ class QuickServicePageState extends State<QuickServicePage>
   }
 
   Future<Map<String, double>> _getCoordinatesForAddress(String address) async {
-    final url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/geocode/json'
-      '?address=${Uri.encodeComponent(address)}'
-      '&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}',
+    final response = await http.post(
+      Uri.parse(
+        'https://utypxmgyfqfwlkpkqrff.supabase.co/functions/v1/geocode-address',
+      ),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${dotenv.env['SUPABASE_ANON_KEY']}',
+      },
+      body: jsonEncode({'address': address}),
     );
 
-    final response = await http.get(url);
     if (response.statusCode == 200) {
       final data = await parseJsonMap(response.body);
       if (data['status'] == 'OK') {
         final location = data['results'][0]['geometry']['location'];
         return {'lat': location['lat'], 'lon': location['lng']};
       }
+      debugPrint('Geocode status not OK: ${data['status']}');
+    } else {
+      debugPrint('Geocode error ${response.statusCode}: ${response.body}');
     }
-    throw Exception('Failed to geocode address');
+    throw Exception('Failed to geocode address: ${response.statusCode}');
   }
 
   Widget _buildPaymentOption(

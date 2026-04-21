@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:cabsudapp/reuse/isolate_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,13 +11,12 @@ import 'package:cabsudapp/custom_page_route.dart';
 import 'package:cabsudapp/reuse/theme.dart';
 import 'car_type.dart';
 import '../localization/string.dart';
-import 'package:geolocator/geolocator.dart';
-
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:cabsudapp/reuse/map_style.dart';
 
-const String googleApiKey =
-    ''; // Deprecated: Use dotenv.env['GOOGLE_MAPS_API_KEY']
+const _kGeocodeUrl =
+    'https://utypxmgyfqfwlkpkqrff.supabase.co/functions/v1/geocode-address';
 
 class RoutePage extends StatefulWidget {
   const RoutePage({super.key});
@@ -378,13 +378,19 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
       return;
     }
 
-    final url =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${Uri.encodeComponent(query)}&key=${dotenv.env['GOOGLE_MAPS_API_KEY']}&components=country:fr';
-
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.post(
+        Uri.parse(
+          'https://utypxmgyfqfwlkpkqrff.supabase.co/functions/v1/autocomplete',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${dotenv.env['SUPABASE_ANON_KEY']}',
+        },
+        body: jsonEncode({'input': query}),
+      );
       if (response.statusCode == 200) {
-        final suggestions = await parseAddressSuggestions(response.body);
+        final suggestions = await parsePlacesV1Suggestions(response.body);
         if (mounted) {
           _suggestionsNotifier.value = suggestions;
         }
@@ -713,16 +719,25 @@ class _LuxuryRouteInterfaceState extends State<LuxuryRouteInterface>
           _currentStepNotifier.value = 1;
 
           try {
-            List<Location> locations = await locationFromAddress(suggestion);
-            if (locations.isNotEmpty && mounted) {
-              final loc = locations.first;
-              final newLocation = LatLng(loc.latitude, loc.longitude);
-              _locationNotifier.value = newLocation;
-
-              await Future.delayed(const Duration(milliseconds: 200));
-              _mapController?.animateCamera(
-                CameraUpdate.newLatLngZoom(newLocation, 14),
-              );
+            final geocodeResponse = await http.post(
+              Uri.parse(_kGeocodeUrl),
+              headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${dotenv.env['SUPABASE_ANON_KEY']}',
+        },
+              body: jsonEncode({'address': suggestion}),
+            );
+            if (geocodeResponse.statusCode == 200) {
+              final coords =
+                  await parseGeocodeResult(geocodeResponse.body);
+              if (coords != null && mounted) {
+                final newLocation = LatLng(coords['lat']!, coords['lng']!);
+                _locationNotifier.value = newLocation;
+                await Future.delayed(const Duration(milliseconds: 200));
+                _mapController?.animateCamera(
+                  CameraUpdate.newLatLngZoom(newLocation, 14),
+                );
+              }
             }
           } catch (e) {
             debugPrint('Error getting location: $e');

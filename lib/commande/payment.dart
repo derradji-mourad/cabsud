@@ -1,11 +1,12 @@
+import 'dart:convert';
 import 'package:cabsudapp/commande/succed.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
 import 'package:cabsudapp/reuse/isolate_helpers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cabsudapp/reuse/theme.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -83,16 +84,19 @@ class _PaymentScreenState extends State<PaymentScreen>
       final int amountInCents = (price * 100).toInt();
 
       final response = await http.post(
-        Uri.parse('https://api.stripe.com/v1/payment_intents'),
+        Uri.parse(
+          'https://utypxmgyfqfwlkpkqrff.supabase.co/functions/v1/create-payment-intent',
+        ),
         headers: {
-          'Authorization': 'Bearer ${dotenv.env['STRIPE_SECRET_KEY']}',
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${dotenv.env['SUPABASE_ANON_KEY']}',
         },
-        body: {
-          'amount': amountInCents.toString(),
+        body: jsonEncode({
+          'amount': amountInCents,
           'currency': 'eur',
-          'payment_method_types[]': 'card',
-        },
+          'email': _emailController.text,
+          'name': _nameController.text,
+        }),
       );
 
       if (response.statusCode != 200) {
@@ -100,7 +104,7 @@ class _PaymentScreenState extends State<PaymentScreen>
       }
 
       final data = await parseJsonMap(response.body);
-      final clientSecret = data['client_secret'];
+      final clientSecret = data['clientSecret'];
 
       await Stripe.instance.confirmPayment(
         paymentIntentClientSecret: clientSecret,

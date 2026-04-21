@@ -133,7 +133,9 @@ class _LuxuryTextFieldState extends State<LuxuryTextField> {
           child: TextFormField(
             controller: widget.controller,
             focusNode: _focusNode,
-            keyboardType: widget.keyboardType,
+            keyboardType: widget.maxLines != 1
+                ? TextInputType.multiline
+                : (widget.keyboardType ?? TextInputType.text),
             maxLines: widget.maxLines,
             obscureText: widget.obscureText,
             validator: widget.validator,

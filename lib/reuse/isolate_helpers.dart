@@ -37,6 +37,24 @@ Future<List<String>> parseAddressSuggestions(String body) {
   });
 }
 
+/// Parse Places API v1 autocomplete response (used by the /autocomplete edge function).
+/// New API shape: { suggestions: [{ placePrediction: { text: { text: "..." } } }] }
+Future<List<String>> parsePlacesV1Suggestions(String body) {
+  return Isolate.run(() {
+    final data = json.decode(body) as Map<String, dynamic>;
+    final suggestions = data['suggestions'] as List<dynamic>? ?? [];
+    return suggestions
+        .map((s) {
+          final pred = (s as Map<String, dynamic>)['placePrediction']
+              as Map<String, dynamic>?;
+          return (pred?['text'] as Map<String, dynamic>?)?['text'] as String? ??
+              '';
+        })
+        .where((s) => s.isNotEmpty)
+        .toList();
+  });
+}
+
 /// Parse Google Directions route polyline + distance/duration in an Isolate.
 /// Returns a map with 'points', 'distance_km', 'duration_min' keys.
 Future<Map<String, dynamic>> parseRouteData(String body) {
@@ -78,6 +96,36 @@ Future<List<Map<String, dynamic>>> parseFareResponse(String body) {
     return fares
         .map((f) => Map<String, dynamic>.from(f as Map))
         .toList();
+  });
+}
+
+/// Parse Routes API v2 response in an Isolate.
+/// Returns 'encodedPolyline', 'distance_km', 'duration_min'.
+Future<Map<String, dynamic>> parseRoutesV2Data(String body) {
+  return Isolate.run(() {
+    final data = json.decode(body) as Map<String, dynamic>;
+    final routes = data['routes'] as List<dynamic>? ?? [];
+    if (routes.isEmpty) {
+      return <String, dynamic>{
+        'encodedPolyline': '',
+        'distance_km': 0.0,
+        'duration_min': 0.0,
+      };
+    }
+    final route = routes[0] as Map<String, dynamic>;
+    final distanceM = (route['distanceMeters'] as num?)?.toDouble() ?? 0.0;
+    final durationStr = route['duration'] as String? ?? '0s';
+    final durationS =
+        double.tryParse(durationStr.replaceAll('s', '')) ?? 0.0;
+    final encodedPolyline =
+        (route['polyline'] as Map<String, dynamic>?)?['encodedPolyline']
+            as String? ??
+            '';
+    return <String, dynamic>{
+      'encodedPolyline': encodedPolyline,
+      'distance_km': distanceM / 1000.0,
+      'duration_min': durationS / 60.0,
+    };
   });
 }
 
