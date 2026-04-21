@@ -67,7 +67,7 @@ class _IntroPage2State extends State<IntroPage2>
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: _CinematicIntroLayout(
-          imagePath: 'assets/intro/airport_transportation.jpg',
+          imagePath: 'assets/intro/air_port_service.jpeg',
           badge: 'AÉROPORT',
           title: Strings.of(context).airportTransferTitle,
           description: Strings.of(context).airportTransferDescription,

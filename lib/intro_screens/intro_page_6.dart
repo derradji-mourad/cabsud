@@ -47,7 +47,7 @@ class _IntroPage6State extends State<IntroPage6>
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: _CinematicIntroLayout(
-          imagePath: 'assets/intro/mise_a_disposition.jpg',
+          imagePath: 'assets/intro/luxury client.jpeg',
           badge: 'MISE À DISPOSITION',
           title: Strings.of(context).introTitle6,
           description: Strings.of(context).introDescription6,

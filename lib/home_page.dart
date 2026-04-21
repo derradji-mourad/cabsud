@@ -44,9 +44,9 @@ class HomePageState extends State<HomePage> {
 
   void _precacheImages() {
     for (final path in [
-      'assets/intro/mise_a_disposition.jpg',
-      'assets/intro/airport_transportation.jpg',
-      'assets/intro/tourisem_transport.jpg',
+      'assets/intro/hero-car.jpg',
+      'assets/intro/disposition-luxury.jpg',
+      'assets/intro/tourism-luxury.jpg',
       'assets/intro/Atob.jpg',
     ]) {
       precacheImage(AssetImage(path), context);
@@ -497,7 +497,7 @@ class _HomeContentState extends State<_HomeContent>
               children: [
                 // Background image
                 Image.asset(
-                  'assets/intro/mise_a_disposition.jpg',
+                  'assets/intro/hero-car.jpg',
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
                 ),
@@ -677,7 +677,7 @@ class _HomeContentState extends State<_HomeContent>
               children: [
                 Expanded(
                   child: _CinematicTile(
-                    imagePath: 'assets/intro/airport_transportation.jpg',
+                    imagePath: 'assets/intro/disposition-luxury.jpg',
                     icon: Icons.directions_car_rounded,
                     badge: 'PREMIUM',
                     title: strings.faireUneCommande1,
@@ -688,7 +688,7 @@ class _HomeContentState extends State<_HomeContent>
                 const SizedBox(width: 12),
                 Expanded(
                   child: _CinematicTile(
-                    imagePath: 'assets/intro/tourisem_transport.jpg',
+                    imagePath: 'assets/intro/tourism-luxury.jpg',
                     icon: Icons.calendar_today_rounded,
                     badge: 'DÉDIÉ',
                     title: strings.miseADisposition1,

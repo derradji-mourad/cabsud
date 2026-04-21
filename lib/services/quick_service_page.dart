@@ -184,13 +184,30 @@ class QuickServicePageState extends State<QuickServicePage>
       return;
     }
 
+    final isCard = _paymentMethodNotifier.value == 'card';
+    if (isCard && (_cardDetails == null || !_cardDetails!.complete)) {
+      _showErrorSnackbar('Please enter complete card details');
+      return;
+    }
+
     _isSubmittingNotifier.value = true;
     HapticFeedback.mediumImpact();
 
     try {
-      final jwt = await _getValidAccessToken();
       final selectedFare = _selectedFareNotifier.value!;
 
+      // Charge the card upfront when "card" is selected. If this throws
+      // (network error, declined card, SCA cancelled…) we never touch the
+      // backend, so no ghost trip is recorded.
+      //
+      // TODO: move PaymentIntent creation to a Supabase Edge Function.
+      // Creating it here requires STRIPE_SECRET_KEY on the client, which is
+      // extractable from the shipped APK/AAB and must not leak.
+      if (isCard) {
+        await _chargeCardForFare(selectedFare);
+      }
+
+      final jwt = await _getValidAccessToken();
       final response = await http.post(
         Uri.parse('${dotenv.env['SUPABASE_URL']}/functions/v1/quick_service'),
         headers: {
@@ -208,13 +225,9 @@ class QuickServicePageState extends State<QuickServicePage>
           'duration_min': selectedFare['duration_min'],
           'payment_method': _paymentMethodNotifier.value,
           'save_card': _saveCardNotifier.value,
-          'card_complete': _cardDetails?.complete ?? false,
-          // In a real flow, you'd use _cardDetails to confirm setups or payments here
-          // For now we pass the intent to backend
+          'paid': isCard,
         }),
       );
-
-      // ... (Success handling remains same)
 
       if (response.statusCode == 200) {
         _isSuccessNotifier.value = true;
@@ -224,12 +237,59 @@ class QuickServicePageState extends State<QuickServicePage>
             'Quick trip error response: ${response.statusCode} - ${response.body}');
         if (mounted) _showErrorSnackbar(Strings.of(context).tripRequestError);
       }
+    } on StripeException catch (e) {
+      debugPrint('Stripe error: ${e.error.code} – ${e.error.localizedMessage}');
+      if (mounted) {
+        _showErrorSnackbar(e.error.localizedMessage ?? 'Payment failed');
+      }
     } catch (e) {
       debugPrint('Error submitting quick trip: $e');
       if (mounted) _showErrorSnackbar(Strings.of(context).tripRequestError);
     } finally {
       if (mounted) _isSubmittingNotifier.value = false;
     }
+  }
+
+  /// Create a Stripe PaymentIntent for [fare] and confirm it with the card
+  /// currently entered in the [CardField]. Throws on any failure so the
+  /// caller can abort the booking.
+  Future<void> _chargeCardForFare(Map<String, dynamic> fare) async {
+    final amountInCents = ((fare['totalFare'] as num) * 100).toInt();
+
+    final intentResponse = await http.post(
+      Uri.parse('https://api.stripe.com/v1/payment_intents'),
+      headers: {
+        'Authorization': 'Bearer ${dotenv.env['STRIPE_SECRET_KEY']}',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: {
+        'amount': amountInCents.toString(),
+        'currency': 'eur',
+        'payment_method_types[]': 'card',
+      },
+    );
+
+    if (intentResponse.statusCode != 200) {
+      throw Exception(
+          'Failed to create PaymentIntent (${intentResponse.statusCode})');
+    }
+
+    final intentData = await parseJsonMap(intentResponse.body);
+    final clientSecret = intentData['client_secret'] as String?;
+    if (clientSecret == null) {
+      throw Exception('PaymentIntent response missing client_secret');
+    }
+
+    await Stripe.instance.confirmPayment(
+      paymentIntentClientSecret: clientSecret,
+      data: PaymentMethodParams.card(
+        paymentMethodData: PaymentMethodData(
+          billingDetails: BillingDetails(
+            name: _nameController.text.trim(),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<String?> _getValidAccessToken() async {

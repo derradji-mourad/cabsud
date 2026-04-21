@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:cabsudapp/reuse/isolate_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -49,6 +50,9 @@ class DistanceCalculatorState extends State<DistanceCalculator>
   final ValueNotifier<bool> _isCalculatingNotifier = ValueNotifier(false);
 
   Timer? _debounceTimer;
+  Timer? _routeDrawDebounce;
+  String? _lastDrawnPickup;
+  String? _lastDrawnDestination;
   bool _isLanguageLoaded = false;
 
   // Animations
@@ -77,16 +81,42 @@ class DistanceCalculatorState extends State<DistanceCalculator>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
+    _pickupController.addListener(_onAddressTextChanged);
+    _destinationController.addListener(_onAddressTextChanged);
+
     _initializeLanguage();
     _getCurrentLocation();
   }
 
+  /// Debounced auto-draw: whenever both fields have enough text to stand a
+  /// chance of geocoding, redraw the route on the map without the user having
+  /// to tap anything. Deduped against the last draw so listener bounces don't
+  /// cause redundant network calls.
+  void _onAddressTextChanged() {
+    _routeDrawDebounce?.cancel();
+    _routeDrawDebounce = Timer(const Duration(milliseconds: 900), () {
+      if (!mounted) return;
+      final pickup = _pickupController.text.trim();
+      final destination = _destinationController.text.trim();
+      if (pickup.length < 5 || destination.length < 5) return;
+      if (pickup == _lastDrawnPickup && destination == _lastDrawnDestination) {
+        return;
+      }
+      _lastDrawnPickup = pickup;
+      _lastDrawnDestination = destination;
+      _drawRoute();
+    });
+  }
+
   @override
   void dispose() {
+    _pickupController.removeListener(_onAddressTextChanged);
+    _destinationController.removeListener(_onAddressTextChanged);
     _pickupController.dispose();
     _destinationController.dispose();
     _mapController?.dispose();
     _debounceTimer?.cancel();
+    _routeDrawDebounce?.cancel();
     _fadeController.dispose();
     _pulseController.dispose();
     _pickupSuggestionsNotifier.dispose();
@@ -298,8 +328,16 @@ class DistanceCalculatorState extends State<DistanceCalculator>
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == 'OK') {
-          final polylineEncoded =
-              data['routes'][0]['overview_polyline']['points'];
+          final route = data['routes'][0];
+          final legs = route['legs'] as List?;
+          if (legs != null && legs.isNotEmpty) {
+            final leg = legs.first;
+            _distanceNotifier.value =
+                (leg['distance']?['text'] as String?) ?? '';
+            _durationNotifier.value =
+                (leg['duration']?['text'] as String?) ?? '';
+          }
+          final polylineEncoded = route['overview_polyline']['points'];
           final decodedPoints = _polylinePoints.decodePolyline(polylineEncoded);
           final routeCoordinates = decodedPoints
               .map((point) => LatLng(point.latitude, point.longitude))
@@ -317,26 +355,43 @@ class DistanceCalculatorState extends State<DistanceCalculator>
       List<LatLng> fullRoute, LatLng pickup, LatLng destination) {
     final animated = <LatLng>[];
     int index = 0;
+    // Progress the animation in a fixed number of steps so long routes don't
+    // take noticeably longer than short ones. ~60 frames at 16 ms ≈ 1 s.
+    final stepSize = (fullRoute.length / 60).ceil().clamp(2, 40);
 
     _polylinesNotifier.value = {};
     _markersNotifier.value = {};
 
-    Timer.periodic(const Duration(milliseconds: 15), (timer) {
+    Timer.periodic(const Duration(milliseconds: 16), (timer) {
       if (!mounted) {
         timer.cancel();
         return;
       }
 
-      final nextIndex = (index + 10).clamp(0, fullRoute.length);
+      final nextIndex = (index + stepSize).clamp(0, fullRoute.length);
       animated.addAll(fullRoute.getRange(index, nextIndex));
+      final pts = List<LatLng>.from(animated);
 
       _polylinesNotifier.value = {
+        // Outer glow layer — soft gold halo around the route.
+        Polyline(
+          polylineId: const PolylineId('route_glow'),
+          points: pts,
+          color: AppTheme.primaryGold.withValues(alpha: 0.22),
+          width: 14,
+          startCap: Cap.roundCap,
+          endCap: Cap.roundCap,
+          jointType: JointType.round,
+        ),
+        // Main solid gold line — the actual route.
         Polyline(
           polylineId: const PolylineId('route'),
-          points: List<LatLng>.from(animated),
+          points: pts,
           color: AppTheme.primaryGold,
-          width: 5,
-          patterns: [PatternItem.dot, PatternItem.gap(8)],
+          width: 6,
+          startCap: Cap.roundCap,
+          endCap: Cap.roundCap,
+          jointType: JointType.round,
         ),
       };
 
@@ -560,11 +615,16 @@ class DistanceCalculatorState extends State<DistanceCalculator>
   }
 
   Widget _buildProgressIndicator() {
-    return ValueListenableBuilder<int>(
-      valueListenable: _currentStepNotifier,
-      builder: (context, currentStep, _) {
-        final hasPickup = _pickupController.text.isNotEmpty;
-        final hasDestination = _destinationController.text.isNotEmpty;
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        _currentStepNotifier,
+        _dateTimeNotifier,
+        _pickupController,
+        _destinationController,
+      ]),
+      builder: (context, _) {
+        final hasPickup = _pickupController.text.trim().isNotEmpty;
+        final hasDestination = _destinationController.text.trim().isNotEmpty;
         final hasDateTime = _dateTimeNotifier.value != null;
         final progress = (hasPickup && hasDestination && hasDateTime)
             ? 1.0
@@ -947,53 +1007,245 @@ class DistanceCalculatorState extends State<DistanceCalculator>
   }
 
   Widget _buildMapView() {
-    final mapHeight = (MediaQuery.of(context).size.height * 0.3).clamp(180.0, 300.0);
+    final mapHeight =
+        (MediaQuery.of(context).size.height * 0.42).clamp(300.0, 440.0);
     return Container(
       height: mapHeight,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: AppTheme.primaryGold.withValues(alpha: 0.4),
+          color: AppTheme.primaryGold.withValues(alpha: 0.5),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryGold.withValues(alpha: 0.2),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            color: AppTheme.primaryGold.withValues(alpha: 0.25),
+            blurRadius: 32,
+            offset: const Offset(0, 16),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
-        child: ValueListenableBuilder<Set<Polyline>>(
-          valueListenable: _polylinesNotifier,
-          builder: (context, polylines, _) {
-            return ValueListenableBuilder<Set<Marker>>(
-              valueListenable: _markersNotifier,
-              builder: (context, markers, _) {
-                return GoogleMap(
-                  initialCameraPosition: const CameraPosition(
-                    target: LatLng(48.8566, 2.3522),
-                    zoom: 12,
-                  ),
-                  onMapCreated: (controller) {
-                    _mapController = controller;
+        borderRadius: BorderRadius.circular(26),
+        child: Stack(
+          children: [
+            ValueListenableBuilder<Set<Polyline>>(
+              valueListenable: _polylinesNotifier,
+              builder: (context, polylines, _) {
+                return ValueListenableBuilder<Set<Marker>>(
+                  valueListenable: _markersNotifier,
+                  builder: (context, markers, _) {
+                    return GoogleMap(
+                      initialCameraPosition: const CameraPosition(
+                        target: LatLng(43.7102, 7.2620), // Nice, southern France
+                        zoom: 11,
+                      ),
+                      onMapCreated: (controller) {
+                        _mapController = controller;
+                      },
+                      style: luxuryMapStyle,
+                      polylines: polylines,
+                      markers: markers,
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: false,
+                      zoomControlsEnabled: false,
+                      mapToolbarEnabled: false,
+                      compassEnabled: false,
+                    );
                   },
-                  style: luxuryMapStyle,
-                  polylines: polylines,
-                  markers: markers,
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  mapToolbarEnabled: false,
                 );
               },
-            );
-          },
+            ),
+            // Top gradient fade — softens the map edge into the app chrome.
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: Container(
+                  height: 72,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.richBlack.withValues(alpha: 0.55),
+                        Colors.transparent,
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Bottom gradient fade.
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: Container(
+                  height: 90,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        AppTheme.richBlack.withValues(alpha: 0.55),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Floating distance/duration chip — top-left.
+            Positioned(top: 14, left: 14, child: _buildMapInfoChip()),
+            // Stacked floating controls — bottom-right.
+            Positioned(
+              right: 14,
+              bottom: 14,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildMapIconButton(Icons.add_rounded, _zoomIn),
+                  const SizedBox(height: 10),
+                  _buildMapIconButton(Icons.remove_rounded, _zoomOut),
+                  const SizedBox(height: 10),
+                  _buildMapIconButton(Icons.my_location_rounded, _recenter),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _buildMapIconButton(IconData icon, VoidCallback onPressed) {
+    return ClipOval(
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Material(
+          color: AppTheme.richBlack.withValues(alpha: 0.55),
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onPressed();
+            },
+            child: Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppTheme.primaryGold.withValues(alpha: 0.55),
+                  width: 1.2,
+                ),
+              ),
+              child: Icon(icon, color: AppTheme.primaryGold, size: 22),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMapInfoChip() {
+    return ValueListenableBuilder<String>(
+      valueListenable: _distanceNotifier,
+      builder: (context, distance, _) {
+        return ValueListenableBuilder<String>(
+          valueListenable: _durationNotifier,
+          builder: (context, duration, _) {
+            if (distance.isEmpty && duration.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.richBlack.withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: AppTheme.primaryGold.withValues(alpha: 0.55),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.route_rounded,
+                          color: AppTheme.primaryGold, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        distance.isEmpty ? '—' : distance,
+                        style: const TextStyle(
+                          color: AppTheme.softWhite,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        width: 1,
+                        height: 14,
+                        color: AppTheme.primaryGold.withValues(alpha: 0.4),
+                      ),
+                      const SizedBox(width: 10),
+                      const Icon(Icons.schedule_rounded,
+                          color: AppTheme.primaryGold, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        duration.isEmpty ? '—' : duration,
+                        style: const TextStyle(
+                          color: AppTheme.softWhite,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _zoomIn() async {
+    final controller = _mapController;
+    if (controller == null) return;
+    final level = await controller.getZoomLevel();
+    await controller.animateCamera(CameraUpdate.zoomTo(level + 1));
+  }
+
+  Future<void> _zoomOut() async {
+    final controller = _mapController;
+    if (controller == null) return;
+    final level = await controller.getZoomLevel();
+    await controller.animateCamera(CameraUpdate.zoomTo(level - 1));
+  }
+
+  Future<void> _recenter() async {
+    final controller = _mapController;
+    if (controller == null) return;
+    try {
+      final position = await Geolocator.getCurrentPosition();
+      await controller.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(position.latitude, position.longitude),
+          15,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Recenter failed: $e');
+    }
   }
 
   Widget _buildDistanceInfo() {
@@ -1073,9 +1325,15 @@ class DistanceCalculatorState extends State<DistanceCalculator>
           end: Alignment.bottomCenter,
         ),
       ),
-      child: ValueListenableBuilder<bool>(
-        valueListenable: _isCalculatingNotifier,
-        builder: (context, isCalculating, _) {
+      child: AnimatedBuilder(
+        animation: Listenable.merge([
+          _isCalculatingNotifier,
+          _dateTimeNotifier,
+          _pickupController,
+          _destinationController,
+        ]),
+        builder: (context, _) {
+          final isCalculating = _isCalculatingNotifier.value;
           final canProceed = _canProceed();
 
           return AnimatedContainer(

@@ -128,7 +128,7 @@ Pour toute assistance, contactez-nous à khaleddarradji@gmail.com.
       'dateRequired': "Veuillez sélectionner une date",
       'timeRequired': "Veuillez sélectionner une heure",
 
-      'faireUnecommande': 'Faire une commande',
+      'faireUneCommande': 'Faire une commande',
       'miseADisposition': 'Service de disponibilité',
       'nosServices': 'Nos services',
       'home': 'Accueil',

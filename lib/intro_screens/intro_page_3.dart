@@ -67,7 +67,7 @@ class _IntroPage3State extends State<IntroPage3>
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: _CinematicIntroLayout(
-          imagePath: 'assets/intro/cruise_transport.jpg',
+          imagePath: 'assets/intro/cruise_service.jpg',
           badge: 'CROISIÈRE',
           title: Strings.of(context).cruiseTransferTitle,
           description: Strings.of(context).cruiseTransferDescription,

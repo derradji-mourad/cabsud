@@ -120,6 +120,8 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
           imagePath: _getVehicleImagePath(type),
           passengers: _getPassengerCount(type),
           bags: _getBagCount(type),
+          amenities: _getAmenities(type),
+          isPopular: type == 'premium',
           price: (fare['totalFare'] as num).toDouble(),
           distanceKm: (fare['distance_km'] as num?)?.toDouble(),
           durationMin: (fare['duration_min'] as num?)?.toDouble(),
@@ -134,6 +136,7 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
           imagePath: 'assets/cars/eco.png',
           passengers: 3,
           bags: 3,
+          amenities: _getAmenities('eco'),
           fixedPrice: '20€/h',
           rate: 1.55,
           minuteRate: 0.30,
@@ -146,6 +149,8 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
           imagePath: 'assets/cars/classE.png',
           passengers: 4,
           bags: 4,
+          amenities: _getAmenities('premium'),
+          isPopular: true,
           fixedPrice: '30€/h',
           rate: 2.00,
           minuteRate: 0.45,
@@ -158,6 +163,7 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
           imagePath: 'assets/cars/van.png',
           passengers: 7,
           bags: 7,
+          amenities: _getAmenities('van'),
           fixedPrice: '40€/h',
           rate: 2.20,
           minuteRate: 0.45,
@@ -165,6 +171,33 @@ class _VehicleSelectionPageState extends State<VehicleSelectionPage>
           vehicleKey: 'van',
         ),
       ];
+    }
+  }
+
+  List<_Amenity> _getAmenities(String type) {
+    switch (type) {
+      case 'eco':
+        return const [
+          _Amenity(Icons.ac_unit_rounded, 'AC'),
+          _Amenity(Icons.wifi_rounded, 'Wi-Fi'),
+          _Amenity(Icons.usb_rounded, 'USB'),
+        ];
+      case 'premium':
+        return const [
+          _Amenity(Icons.ac_unit_rounded, 'AC'),
+          _Amenity(Icons.wifi_rounded, 'Wi-Fi'),
+          _Amenity(Icons.water_drop_rounded, 'Water'),
+          _Amenity(Icons.chair_rounded, 'Leather'),
+        ];
+      case 'van':
+        return const [
+          _Amenity(Icons.ac_unit_rounded, 'AC'),
+          _Amenity(Icons.wifi_rounded, 'Wi-Fi'),
+          _Amenity(Icons.water_drop_rounded, 'Water'),
+          _Amenity(Icons.group_rounded, 'Group'),
+        ];
+      default:
+        return const [];
     }
   }
 
@@ -313,6 +346,8 @@ class _VehicleModel {
   final int passengers;
   final int bags;
   final String vehicleKey;
+  final List<_Amenity> amenities;
+  final bool isPopular;
   final double? price;
   final double? distanceKm;
   final double? durationMin;
@@ -328,6 +363,8 @@ class _VehicleModel {
     required this.passengers,
     required this.bags,
     required this.vehicleKey,
+    this.amenities = const [],
+    this.isPopular = false,
     this.price,
     this.distanceKm,
     this.durationMin,
@@ -336,6 +373,12 @@ class _VehicleModel {
     this.minuteRate,
     this.priseEnCharge,
   });
+}
+
+class _Amenity {
+  final IconData icon;
+  final String label;
+  const _Amenity(this.icon, this.label);
 }
 
 /// Luxury loading indicator
@@ -503,25 +546,39 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Vehicle image with hero animation
-                Center(
-                  child: Hero(
-                    tag: widget.vehicle.imagePath,
-                    child: Container(
-                      height: 140,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Image.asset(
-                        widget.vehicle.imagePath,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.directions_car_rounded,
-                            size: 60,
-                            color: AppTheme.primary.withValues(alpha: 0.3),
-                          );
-                        },
+                // Vehicle image with hero animation + popular badge overlay
+                SizedBox(
+                  height: 140,
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Hero(
+                          tag: widget.vehicle.imagePath,
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 20),
+                            child: Image.asset(
+                              widget.vehicle.imagePath,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(
+                                  Icons.directions_car_rounded,
+                                  size: 60,
+                                  color:
+                                      AppTheme.primary.withValues(alpha: 0.3),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      if (widget.vehicle.isPopular && !widget.isSelected)
+                        const Positioned(
+                          top: 0,
+                          right: 0,
+                          child: _PopularBadge(),
+                        ),
+                    ],
                   ),
                 ),
 
@@ -564,7 +621,17 @@ class _LuxuryVehicleCardState extends State<_LuxuryVehicleCard> {
                   overflow: TextOverflow.ellipsis,
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
+
+                // Amenity chips
+                if (widget.vehicle.amenities.isNotEmpty)
+                  _AmenityRow(
+                    amenities: widget.vehicle.amenities,
+                    isSelected: widget.isSelected,
+                  ),
+
+                if (widget.vehicle.amenities.isNotEmpty)
+                  const SizedBox(height: 16),
 
                 // Capacity information
                 _CapacityRow(
@@ -601,7 +668,7 @@ class _LuxuryAppBar extends StatelessWidget implements PreferredSizeWidget {
   const _LuxuryAppBar({required this.title, required this.onBack});
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight + 18);
 
   @override
   Widget build(BuildContext context) {
@@ -609,22 +676,38 @@ class _LuxuryAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       centerTitle: true,
       backgroundColor: Colors.transparent,
+      toolbarHeight: kToolbarHeight + 18,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new, color: AppTheme.primary),
         onPressed: onBack,
       ),
-      title: ShaderMask(
-        shaderCallback: (bounds) =>
-            AppTheme.subtleGoldGradient.createShader(bounds),
-        child: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 2,
+      title: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ShaderMask(
+            shaderCallback: (bounds) =>
+                AppTheme.subtleGoldGradient.createShader(bounds),
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 2,
+              ),
+            ),
           ),
-        ),
+          const SizedBox(height: 2),
+          Text(
+            'Tap a vehicle to reserve',
+            style: TextStyle(
+              color: AppTheme.offWhite.withValues(alpha: 0.55),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.6,
+            ),
+          ),
+        ],
       ),
       flexibleSpace: Container(
         decoration: BoxDecoration(
@@ -637,6 +720,112 @@ class _LuxuryAppBar extends StatelessWidget implements PreferredSizeWidget {
             end: Alignment.bottomCenter,
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  POPULAR BADGE
+// ─────────────────────────────────────────────────────────────
+
+class _PopularBadge extends StatelessWidget {
+  const _PopularBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppTheme.accentGold, AppTheme.primaryGold],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryGold.withValues(alpha: 0.45),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.local_fire_department_rounded,
+              color: AppTheme.richBlack, size: 12),
+          SizedBox(width: 4),
+          Text(
+            'POPULAR',
+            style: TextStyle(
+              color: AppTheme.richBlack,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  AMENITY ROW
+// ─────────────────────────────────────────────────────────────
+
+class _AmenityRow extends StatelessWidget {
+  final List<_Amenity> amenities;
+  final bool isSelected;
+  const _AmenityRow({required this.amenities, required this.isSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
+      children: amenities
+          .map((a) => _AmenityChip(amenity: a, isSelected: isSelected))
+          .toList(growable: false),
+    );
+  }
+}
+
+class _AmenityChip extends StatelessWidget {
+  final _Amenity amenity;
+  final bool isSelected;
+  const _AmenityChip({required this.amenity, required this.isSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppTheme.primary.withValues(alpha: 0.18)
+            : AppTheme.muted.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppTheme.primaryGold.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(amenity.icon, size: 13, color: AppTheme.primaryGold),
+          const SizedBox(width: 5),
+          Text(
+            amenity.label,
+            style: TextStyle(
+              color: AppTheme.softWhite.withValues(alpha: 0.9),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
       ),
     );
   }

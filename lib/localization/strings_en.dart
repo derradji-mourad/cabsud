@@ -133,7 +133,7 @@ For support, contact us at khaleddarradji@gmail.com.
       'dateRequired': "Please select a date",
       'timeRequired': "Please select a time",
 
-      'faireUnecommande': 'Place an Order',
+      'faireUneCommande': 'Place an Order',
       'miseADisposition': 'Availability Service',
       'nosServices': 'Our Services',
       'home': 'Home',

@@ -111,7 +111,7 @@ class _IntroPage1State extends State<IntroPage1>
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: _CinematicIntroLayout(
-          imagePath: 'assets/intro/intro.jpg',
+          imagePath: 'assets/intro/luxury-driver.jpeg',
           badge: 'PREMIUM SERVICE',
           title: Strings.of(context).appTitle,
           description: Strings.of(context).descriptionText,

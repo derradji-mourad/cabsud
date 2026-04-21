@@ -67,7 +67,7 @@ class _IntroPage5State extends State<IntroPage5>
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: _CinematicIntroLayout(
-          imagePath: 'assets/intro/tourisem_transport.jpg',
+          imagePath: 'assets/intro/tourisem_service.jpeg',
           badge: 'TOURISME',
           title: Strings.of(context).introTitle5,
           description: Strings.of(context).introDescription5,

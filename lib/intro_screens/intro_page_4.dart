@@ -67,7 +67,7 @@ class _IntroPage4State extends State<IntroPage4>
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: _CinematicIntroLayout(
-          imagePath: 'assets/intro/gare_transport.jpg',
+          imagePath: 'assets/intro/train_station_service.jpeg',
           badge: 'GARE',
           title: Strings.of(context).trainTransferTitle,
           description: Strings.of(context).trainTransferDescription,
