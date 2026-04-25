@@ -407,7 +407,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.medium,
                 gaplessPlayback: true,
-                errorBuilder: (_, __, ___) => Icon(
+                errorBuilder: (_, __, ___) => const Icon(
                   Icons.directions_car_rounded,
                   size: 36,
                   color: AppTheme.primaryGold,
@@ -696,7 +696,7 @@ class _Divider extends StatelessWidget {
         Expanded(
           child: Container(
             height: 1,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,
@@ -721,7 +721,7 @@ class _Divider extends StatelessWidget {
         Expanded(
           child: Container(
             height: 1,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   AppTheme.border,

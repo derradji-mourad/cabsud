@@ -192,7 +192,7 @@ class _SplashContent extends StatelessWidget {
                   'assets/logo/splach-logo.png',
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
-                  errorBuilder: (_, __, ___) => Icon(
+                  errorBuilder: (_, __, ___) => const Icon(
                     Icons.directions_car_rounded,
                     size: 48,
                     color: AppTheme.primaryGold,

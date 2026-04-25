@@ -288,7 +288,7 @@ class _LoginScreenState extends State<LoginScreen>
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.medium,
                 gaplessPlayback: true,
-                errorBuilder: (_, __, ___) => Icon(
+                errorBuilder: (_, __, ___) => const Icon(
                   Icons.directions_car_rounded,
                   size: 40,
                   color: AppTheme.primaryGold,
