@@ -161,6 +161,7 @@ class Strings {
   String get calculerLaDistance => _currentStrings['calculerLaDistance'] ?? '';
 
   String get accueil => _currentStrings['accueil'] ?? '';
+  String get reservations => _currentStrings['reservations'] ?? '';
   String get contact1 => _currentStrings['contact'] ?? '';
   String get parametres => _currentStrings['parametres'] ?? '';
   String get faireUneCommande1 => _currentStrings['faireUneCommande'] ?? '';

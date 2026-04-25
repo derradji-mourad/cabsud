@@ -8,6 +8,7 @@ import 'package:cabsudapp/commande/succed.dart';
 import 'package:cabsudapp/commande/payment.dart';
 import 'package:cabsudapp/custom_page_route.dart';
 import 'package:cabsudapp/reuse/theme.dart';
+import 'package:cabsudapp/reuse/booking_notification_service.dart';
 
 class TripSummaryPage extends StatefulWidget {
   final Map<String, dynamic> tripData;
@@ -220,6 +221,22 @@ class _TripSummaryPageState extends State<TripSummaryPage>
       );
 
       if (response.statusCode == 200) {
+        // Extract the booking ID returned by the edge function for stable
+        // notification IDs. Falls back to the ISO datetime string.
+        String notificationBookingId = formattedDateTime;
+        try {
+          final resp = jsonDecode(response.body) as Map<String, dynamic>;
+          final id = resp['id'] ?? resp['request_id'];
+          if (id != null) notificationBookingId = id.toString();
+        } catch (_) {}
+
+        // Schedule 5 reminders (fire-and-forget — does not block navigation).
+        final reservationTime = DateTime.parse(formattedDateTime);
+        BookingNotificationService.instance
+            .scheduleBookingReminders(notificationBookingId, reservationTime)
+            .catchError(
+                (e) => debugPrint('Notification scheduling failed: $e'));
+
         final isCash = widget.tripData['is_cash'] ?? true;
 
         if (!mounted) return;

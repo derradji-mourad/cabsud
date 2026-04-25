@@ -1,5 +1,5 @@
 name: cabsudapp
-description: "A new Flutter project."
+description: "CABSUD — application de réservation de chauffeur privé (sud de la France)."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -58,6 +58,9 @@ dependencies:
   url_launcher: ^6.2.5
   dio: ^5.8.0+1
   auto_size_text: ^3.0.0
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+  flutter_timezone: ^5.0.2
 
 flutter_launcher_icons:
     android: "launcher_icon"

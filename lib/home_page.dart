@@ -9,6 +9,7 @@ import 'package:cabsudapp/services/route_page.dart';
 import 'package:cabsudapp/localization/string.dart';
 import 'package:cabsudapp/services/services_type_page.dart';
 import 'package:cabsudapp/services/quick_service_page.dart';
+import 'package:cabsudapp/reservation_page.dart';
 
 // ─────────────────────────────────────────────────────────────
 //  ROOT
@@ -47,7 +48,6 @@ class HomePageState extends State<HomePage> {
       'assets/intro/hero-car.jpg',
       'assets/intro/disposition-luxury.jpg',
       'assets/intro/tourism-luxury.jpg',
-      'assets/intro/Atob.jpg',
     ]) {
       precacheImage(AssetImage(path), context);
     }
@@ -66,6 +66,7 @@ class HomePageState extends State<HomePage> {
                 index: _currentIndex,
                 children: const [
                   _HomeContent(),
+                  RepaintBoundary(child: ReservationPage()),
                   ContactPage(),
                   SettingsPage(),
                 ],
@@ -182,16 +183,22 @@ class _FloatingNavBar extends StatelessWidget {
             onTap: () => onIndexChanged(0),
           ),
           _NavItem(
-            icon: Icons.phone_rounded,
-            label: strings.contact1,
+            icon: Icons.receipt_long_rounded,
+            label: strings.reservations,
             isActive: currentIndex == 1,
             onTap: () => onIndexChanged(1),
           ),
           _NavItem(
-            icon: Icons.settings_rounded,
-            label: strings.parametres,
+            icon: Icons.phone_rounded,
+            label: strings.contact1,
             isActive: currentIndex == 2,
             onTap: () => onIndexChanged(2),
+          ),
+          _NavItem(
+            icon: Icons.settings_rounded,
+            label: strings.parametres,
+            isActive: currentIndex == 3,
+            onTap: () => onIndexChanged(3),
           ),
         ],
       ),
@@ -569,7 +576,7 @@ class _HomeContentState extends State<_HomeContent>
                             width: 1,
                           ),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
@@ -577,7 +584,7 @@ class _HomeContentState extends State<_HomeContent>
                               color: AppTheme.primaryGold,
                               size: 10,
                             ),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4),
                             Text(
                               'EXPRESS',
                               style: TextStyle(
@@ -908,7 +915,7 @@ class _CinematicTileState extends State<_CinematicTile> {
                               ),
                               child: Text(
                                 widget.badge,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: AppTheme.primaryGold,
                                   fontSize: 8,
                                   fontWeight: FontWeight.w800,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../localization/string.dart';
@@ -201,6 +202,10 @@ class _SettingsPageState extends State<SettingsPage>
                 const SizedBox(height: 28),
                 _buildProfileCard(),
                 const SizedBox(height: 20),
+                _buildSectionLabel('MON COMPTE'),
+                const SizedBox(height: 10),
+                _buildAccountCard(),
+                const SizedBox(height: 20),
                 _buildSectionLabel('PRÉFÉRENCES'),
                 const SizedBox(height: 10),
                 _buildSettingsCard(strings),
@@ -337,6 +342,34 @@ class _SettingsPageState extends State<SettingsPage>
           fontWeight: FontWeight.w700,
           letterSpacing: 2.5,
         ),
+      ),
+    );
+  }
+
+  Widget _buildAccountCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppTheme.primaryGold.withValues(alpha: 0.12),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: _buildLuxuryTile(
+        title: 'Mes réservations',
+        icon: Icons.calendar_month_rounded,
+        onTap: () {
+          HapticFeedback.lightImpact();
+          Navigator.pushNamed(context, '/reservations');
+        },
       ),
     );
   }

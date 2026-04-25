@@ -147,6 +147,7 @@ For support, contact us at khaleddarradji@gmail.com.
       'calculerLaDistance': 'Calculate Distance',
 
       'accueil': 'Home',
+      'reservations': 'Reservations',
       'contact1': 'Contact',
       'parametres': 'Settings',
       'faireUnecommande2': 'Place an Order',

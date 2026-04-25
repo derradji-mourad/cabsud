@@ -4,6 +4,8 @@ import 'package:cabsudapp/authentification/sing_up.dart';
 import 'package:cabsudapp/home_page.dart';
 import 'package:cabsudapp/spalsh_screen.dart';
 import 'package:cabsudapp/reuse/theme.dart';
+import 'package:cabsudapp/reuse/notification_service.dart';
+import 'package:cabsudapp/reservation_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -105,14 +107,18 @@ class _MyAppState extends State<MyApp> {
     bool isLoggedIn = false;
 
     try {
-      // Run Stripe settings and session restore concurrently
-      // Stripe failure should NOT block the app
+      // Run Stripe settings, session restore, and notifications concurrently.
+      // Stripe and notification failures are non-fatal.
       final results = await Future.wait([
         Stripe.instance.applySettings().catchError((e) {
           debugPrint('Stripe init failed (non-fatal): $e');
           return null;
         }),
         _tryRestoreSession(),
+        NotificationService.instance.init().catchError((e) {
+          debugPrint('Notification init failed (non-fatal): $e');
+          return null;
+        }),
       ]);
 
       isLoggedIn = results[1] as bool;
@@ -151,6 +157,7 @@ class _MyAppState extends State<MyApp> {
         '/home': (context) => const HomePage(),
         '/login': (context) => const LoginScreen(),
         '/signin': (context) => const SignUpScreen(),
+        '/reservations': (context) => const ReservationPage(),
       },
     );
   }

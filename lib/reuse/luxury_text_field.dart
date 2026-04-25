@@ -135,7 +135,7 @@ class _LuxuryTextFieldState extends State<LuxuryTextField> {
             focusNode: _focusNode,
             keyboardType: widget.maxLines != 1
                 ? TextInputType.multiline
-                : (widget.keyboardType ?? TextInputType.text),
+                : widget.keyboardType,
             maxLines: widget.maxLines,
             obscureText: widget.obscureText,
             validator: widget.validator,
