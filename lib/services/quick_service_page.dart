@@ -28,6 +28,7 @@ class QuickServicePageState extends State<QuickServicePage>
     with TickerProviderStateMixin {
   // Controllers
   final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _pickupController = TextEditingController();
   final _dropoffController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -51,6 +52,7 @@ class QuickServicePageState extends State<QuickServicePage>
   CardFieldInputDetails? _cardDetails;
 
   GoogleMapController? _mapController;
+  LatLngBounds? _pendingBounds;
   final _polylinePoints = PolylinePoints();
 
   Timer? _debounceTimer;
@@ -94,6 +96,7 @@ class QuickServicePageState extends State<QuickServicePage>
     _pickupController.removeListener(_onAddressChangedListener);
     _dropoffController.removeListener(_onAddressChangedListener);
     _nameController.dispose();
+    _phoneController.dispose();
     _pickupController.dispose();
     _dropoffController.dispose();
     _debounceTimer?.cancel();
@@ -217,6 +220,7 @@ class QuickServicePageState extends State<QuickServicePage>
         },
         body: jsonEncode({
           'passenger_name': _nameController.text.trim(),
+          'phone_number': _phoneController.text.trim(),
           'pickup_address': _pickupController.text.trim(),
           'dropoff_address': _dropoffController.text.trim(),
           'car_type': selectedFare['vehicle_type'],
@@ -471,6 +475,26 @@ class QuickServicePageState extends State<QuickServicePage>
               ),
               const SizedBox(height: 20),
 
+              // Phone field
+              _buildTextField(
+                controller: _phoneController,
+                label: Strings.of(context).phoneLabel,
+                hint: Strings.of(context).phoneHint,
+                icon: Icons.phone_rounded,
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  final trimmed = value?.trim() ?? '';
+                  if (trimmed.isEmpty) {
+                    return Strings.of(context).phoneValidation;
+                  }
+                  if (trimmed.length < 7) {
+                    return Strings.of(context).phoneValidation;
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+
               // Pickup address
               _buildAddressField(
                 controller: _pickupController,
@@ -504,42 +528,50 @@ class QuickServicePageState extends State<QuickServicePage>
               const SizedBox(height: 32),
 
               // Map View
-              AnimatedBuilder(
-                animation:
-                    Listenable.merge([_polylinesNotifier, _markersNotifier]),
-                builder: (context, _) {
-                  if (_polylinesNotifier.value.isEmpty &&
-                      _markersNotifier.value.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-                  return Container(
-                    height: 200,
-                    margin: const EdgeInsets.only(bottom: 32),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                          color: AppTheme.primaryGold.withValues(alpha: 0.3)),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: GoogleMap(
-                        initialCameraPosition: const CameraPosition(
-                          target: LatLng(43.2965, 5.3698), // Default Marseille
-                          zoom: 12,
-                        ),
-                        onMapCreated: (controller) {
-                          _mapController = controller;
+              Container(
+                height: 200,
+                margin: const EdgeInsets.only(bottom: 32),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: ValueListenableBuilder<Set<Polyline>>(
+                    valueListenable: _polylinesNotifier,
+                    builder: (context, polylines, _) {
+                      return ValueListenableBuilder<Set<Marker>>(
+                        valueListenable: _markersNotifier,
+                        builder: (context, markers, _) {
+                          return GoogleMap(
+                            initialCameraPosition: const CameraPosition(
+                              target:
+                                  LatLng(43.2965, 5.3698), // Default Marseille
+                              zoom: 12,
+                            ),
+                            onMapCreated: (controller) {
+                              _mapController = controller;
+                              final pending = _pendingBounds;
+                              if (pending != null) {
+                                _pendingBounds = null;
+                                controller.animateCamera(
+                                  CameraUpdate.newLatLngBounds(pending, 50),
+                                );
+                              }
+                            },
+                            style: luxuryMapStyle,
+                            markers: markers,
+                            polylines: polylines,
+                            myLocationEnabled: false,
+                            zoomControlsEnabled: false,
+                            mapType: MapType.normal,
+                          );
                         },
-                        style: luxuryMapStyle,
-                        markers: _markersNotifier.value,
-                        polylines: _polylinesNotifier.value,
-                        myLocationEnabled: false,
-                        zoomControlsEnabled: false,
-                        mapType: MapType.normal,
-                      ),
-                    ),
-                  );
-                },
+                      );
+                    },
+                  ),
+                ),
               ),
 
               // Vehicle Selection
@@ -888,6 +920,7 @@ class QuickServicePageState extends State<QuickServicePage>
     required String hint,
     required IconData icon,
     required String? Function(String?) validator,
+    TextInputType? keyboardType,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -906,6 +939,7 @@ class QuickServicePageState extends State<QuickServicePage>
       child: TextFormField(
         controller: controller,
         validator: validator,
+        keyboardType: keyboardType,
         style: const TextStyle(
           color: AppTheme.softWhite,
           fontSize: 16,
@@ -1285,33 +1319,32 @@ class QuickServicePageState extends State<QuickServicePage>
   }
 
   void _animateCamera(LatLng pickup, LatLng dropoff) {
-    // Wait for map to be created and controller to be assigned
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted || _mapController == null) return;
-      _mapController?.animateCamera(
-        CameraUpdate.newLatLngBounds(
-          LatLngBounds(
-            southwest: LatLng(
-              pickup.latitude < dropoff.latitude
-                  ? pickup.latitude
-                  : dropoff.latitude,
-              pickup.longitude < dropoff.longitude
-                  ? pickup.longitude
-                  : dropoff.longitude,
-            ),
-            northeast: LatLng(
-              pickup.latitude > dropoff.latitude
-                  ? pickup.latitude
-                  : dropoff.latitude,
-              pickup.longitude > dropoff.longitude
-                  ? pickup.longitude
-                  : dropoff.longitude,
-            ),
-          ),
-          50, // padding
-        ),
-      );
-    });
+    final bounds = LatLngBounds(
+      southwest: LatLng(
+        pickup.latitude < dropoff.latitude
+            ? pickup.latitude
+            : dropoff.latitude,
+        pickup.longitude < dropoff.longitude
+            ? pickup.longitude
+            : dropoff.longitude,
+      ),
+      northeast: LatLng(
+        pickup.latitude > dropoff.latitude
+            ? pickup.latitude
+            : dropoff.latitude,
+        pickup.longitude > dropoff.longitude
+            ? pickup.longitude
+            : dropoff.longitude,
+      ),
+    );
+
+    final controller = _mapController;
+    if (controller == null) {
+      // Map not yet created — apply when onMapCreated fires.
+      _pendingBounds = bounds;
+      return;
+    }
+    controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
   }
 
   Future<Map<String, double>> _getCoordinatesForAddress(String address) async {
