@@ -3,8 +3,11 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:cabsudapp/reuse/theme.dart';
 import '../localization/string.dart';
+
+const String _whatsAppNumber = '33652384770';
 
 /// Ultra-premium contact page with smooth animations and luxury design
 class ContactPage extends StatefulWidget {
@@ -228,6 +231,16 @@ $message
     );
   }
 
+  Future<void> _openWhatsApp() async {
+    HapticFeedback.lightImpact();
+    final uri = Uri.parse('https://wa.me/$_whatsAppNumber');
+    final launched =
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
+      _showErrorSnackbar('Could not open WhatsApp.');
+    }
+  }
+
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -354,6 +367,8 @@ $message
                               onSend: _sendEmail,
                               buttonText: Strings.of(context).submitButton,
                             ),
+                            const SizedBox(height: 20),
+                            _WhatsAppButton(onTap: _openWhatsApp),
                             const SizedBox(height: 40),
                           ],
                         ),
@@ -528,6 +543,63 @@ class _ContactHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _WhatsAppButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _WhatsAppButton({required this.onTap});
+
+  static const Color _whatsAppGreen = Color(0xFF25D366);
+  static const Color _whatsAppDarkGreen = Color(0xFF128C7E);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 60,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [_whatsAppGreen, _whatsAppDarkGreen],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _whatsAppGreen.withValues(alpha: 0.4),
+            blurRadius: 25,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: const Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.chat_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                SizedBox(width: 12),
+                Text(
+                  'WHATSAPP',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -58,30 +58,24 @@ class ServicesPageState extends State<ServicesPage> {
     ];
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: Text(Strings.of(context).servicesTitle),
         backgroundColor: AppTheme.background,
         centerTitle: true,
         elevation: 2,
       ),
-      body: Container(
-        color: AppTheme.background,
-        child: ListView.builder(
-          padding: const EdgeInsets.all(20),
-          itemCount: services.length + 1,
-          itemBuilder: (context, index) {
-            if (index < services.length) {
-              final service = services[index];
-              return ServiceCard(
-                title: service.title,
-                description: service.description,
-                icon: service.icon,
-              );
-            } else {
-              return const SizedBox(height: 30);
-            }
-          },
-        ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(20),
+        itemCount: services.length,
+        itemBuilder: (context, index) {
+          final service = services[index];
+          return ServiceCard(
+            title: service.title,
+            description: service.description,
+            icon: service.icon,
+          );
+        },
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),

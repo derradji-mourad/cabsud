@@ -108,13 +108,21 @@ class _MyAppState extends State<MyApp> {
 
     try {
       // Run Stripe settings, session restore, and notifications concurrently.
-      // Stripe and notification failures are non-fatal.
+      // All are bounded by timeouts so a hung network call can never trap
+      // the splash screen.
       final results = await Future.wait([
         Stripe.instance.applySettings().catchError((e) {
           debugPrint('Stripe init failed (non-fatal): $e');
           return null;
         }),
-        _tryRestoreSession(),
+        _tryRestoreSession()
+            .timeout(const Duration(seconds: 5), onTimeout: () {
+          debugPrint('Session restore timed out — proceeding logged-out');
+          return false;
+        }).catchError((e) {
+          debugPrint('Session restore failed (non-fatal): $e');
+          return false;
+        }),
         NotificationService.instance.init().catchError((e) {
           debugPrint('Notification init failed (non-fatal): $e');
           return null;
